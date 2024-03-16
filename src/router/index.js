@@ -1,5 +1,12 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
+import CreateLicenseMapping from '../views/CreateLicenseMapping.vue'
+import Calculator from '../views/Calculator.vue'
+import uploadpdfVue from '../views/UploadPdf.vue'
+import uploadCsv from '../views/UploadCsv.vue'
+import FindTableData from '../views/FindTableData.vue'
+import ReportData from '../views/ReportData.vue'
+import testocr from '../views/testocr.vue'
 
 const routes = [
   {
@@ -8,12 +15,39 @@ const routes = [
     component: HomeView
   },
   {
-    path: '/about',
-    name: 'about',
-    // route level code-splitting
-    // this generates a separate chunk (about.[hash].js) for this route
-    // which is lazy-loaded when the route is visited.
-    component: () => import(/* webpackChunkName: "about" */ '../views/AboutView.vue')
+    path: '/licensemapping',
+    name: 'licensemapping',
+    component: CreateLicenseMapping
+  },
+  {
+    path: '/calculator',
+    name: 'calculator',
+    component: Calculator
+  },
+  {
+    path: '/uploadpdf',
+    name: 'uploadpdf',
+    component: uploadpdfVue
+  },
+  {
+    path: '/uploadcsv',
+    name: 'uploadcsv',
+    component: uploadCsv
+  },
+  {
+    path: '/findtabledata',
+    name: 'findtabledata',
+    component: FindTableData
+  },
+  {
+    path: '/reportdata',
+    name: 'reportdata',
+    component: ReportData
+  },
+  {
+    path: '/test',
+    name: 'test',
+    component: testocr
   }
 ]
 
