@@ -16,7 +16,7 @@
         <v-select
           v-model="selectedComponentNames"
           :items="componentNamesList"
-          label="Component Names"
+          label="Component Name"
           outlined
           dense
           multiple
