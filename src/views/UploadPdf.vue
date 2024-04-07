@@ -1,5 +1,8 @@
 <template>
   <v-container>
+    <v-col class="text-left">
+      <h2>Upload PDF</h2>
+    </v-col>
     <v-row>
       <v-col cols="12" sm="6" md="4">
         <v-file-input
@@ -7,63 +10,201 @@
           label="Upload PDF"
           accept=".pdf"
           @change="handleFileUpload"
+          variant="outlined"
         ></v-file-input>
       </v-col>
       <v-col cols="12" sm="6" md="4">
         <v-text-field
           v-model="ibmAgreementNumber"
           label="IBM Agreement Number"
+          variant="outlined"
         ></v-text-field>
       </v-col>
       <v-col cols="12" sm="6" md="4">
         <v-text-field
           v-model="ibmSiteNumber"
           label="IBM Site Number"
+          variant="outlined"
         ></v-text-field>
       </v-col>
       <v-col cols="12" sm="6" md="4">
         <v-text-field
           v-model="ibmCustomerNumber"
           label="IBM Customer Number"
+          variant="outlined"
         ></v-text-field>
       </v-col>
       <v-col cols="12" sm="6" md="4">
         <v-text-field
           v-model="ibmOrderRefNumber"
           label="IBM Order Reference Number"
+          variant="outlined"
         ></v-text-field>
       </v-col>
       <v-col cols="12" sm="6" md="4">
-        <v-text-field
-          v-model="ibmOrderRefDate"
-          label="IBM Order Reference Date"
-        ></v-text-field>
+        <v-menu :close-on-content-click="false">
+          <template v-slot:activator="{ props }">
+            <v-text-field
+              v-model="formattedibmOrderRefDate"
+              label="IBM Order Reference Date"
+              variant="outlined"
+              v-bind="props"
+            ></v-text-field>
+          </template>
+          <v-date-picker v-model="ibmOrderRefDate" @click.stop></v-date-picker>
+        </v-menu>
       </v-col>
       <v-col cols="12">
-        <v-select
-          v-model="selectedLicenses"
-          :items="tableData.map((item) => item['license_name'])"
-          label="Select Licenses"
-          multiple
-        ></v-select>
+        <v-row
+          v-for="(selectedLicense, index) in selectedLicenses"
+          :key="selectedLicense.id"
+        >
+          <v-col cols="4">
+            <v-select
+              v-model="selectedLicense.value"
+              :items="tableData.map((item) => item['license_name'])"
+              variant="outlined"
+              :label="'Select License '"
+            ></v-select>
+          </v-col>
+          <v-col cols="4">
+            <v-text-field
+              v-model="quantity[index]"
+              variant="outlined"
+              :label="'Quantity '"
+            ></v-text-field>
+          </v-col>
+          <v-col cols="2">
+            <v-menu :close-on-content-click="false">
+              <template v-slot:activator="{ props }">
+                <v-text-field
+                  v-model="formattedStartDate[index]"
+                  variant="outlined"
+                  :label="'Start Date'"
+                  v-bind="props"
+                ></v-text-field>
+              </template>
+              <v-date-picker
+                v-model="start_date[index]"
+                @click.stop
+              ></v-date-picker>
+            </v-menu>
+          </v-col>
+          <v-col cols="2">
+            <v-menu>
+              <template v-slot:activator="{ props }">
+                <v-text-field
+                  v-model="formattedEndDate[index]"
+                  variant="outlined"
+                  :label="'End Date'"
+                  v-bind="props"
+                ></v-text-field>
+              </template>
+              <v-date-picker
+                v-model="end_date[index]"
+                @click.stop
+              ></v-date-picker>
+            </v-menu>
+          </v-col>
+        </v-row>
+        <v-row>
+          <v-col cols="12" class="text-center">
+            <v-btn color="primary" @click="addColumn" class="mr-2"
+              >Add License</v-btn
+            >
+            <v-btn color="error" @click="deleteLicense(index)">delete</v-btn>
+          </v-col>
+        </v-row>
       </v-col>
     </v-row>
     <v-col cols="12" class="text-right mt-5">
-      <v-btn @click="autoFillFields" class="mr-2">Auto Fill</v-btn>
+      <v-btn
+        @click="autoFillFields"
+        color="primary"
+        class="mr-2"
+        :disabled="!file"
+        >Auto Fill</v-btn
+      >
       <v-btn @click="uploadFile" color="primary">Upload</v-btn>
     </v-col>
-
     <v-data-table :headers="headers" :items="pdfFiles" item-key="id">
-      <template v-slot:[`item.selected_licenses`]="{ item }">
-        <span v-html="addLineBreaks(item.selected_licenses)"></span>
+      <template v-slot:[`item.actions`]="{ item, index }">
+        <v-icon
+          color="error"
+          @click="deleteFile(item.id)"
+          v-if="isFirstOccurrence('filename', item.filename, index)"
+          >mdi-delete</v-icon
+        >
       </template>
-      <template v-slot:[`item.actions`]="{ item }">
-        <v-icon color="error" @click="deleteFile(item.id)">mdi-delete</v-icon>
-      </template>
-      <template v-slot:[`item.open`]="{ item }">
-        <v-icon color="primary" @click="openURL(item.downloadlink)"
+      <template v-slot:[`item.open`]="{ item, index }">
+        <v-icon
+          color="primary"
+          @click="openURL(item.downloadlink)"
+          v-if="isFirstOccurrence('filename', item.filename, index)"
           >mdi-open-in-new</v-icon
         >
+      </template>
+      <template v-slot:[`item.filename`]="{ item, index }">
+        {{
+          isFirstOccurrence("filename", item.filename, index)
+            ? item.filename
+            : ""
+        }}
+      </template>
+      <template v-slot:[`item.ibm_site_number`]="{ item, index }">
+        {{
+          isFirstOccurrence("ibm_site_number", item.ibm_site_number, index)
+            ? item.ibm_site_number
+            : ""
+        }}
+      </template>
+      <template v-slot:[`item.ibm_agreement_number`]="{ item, index }">
+        {{
+          isFirstOccurrence(
+            "ibm_agreement_number",
+            item.ibm_agreement_number,
+            index
+          )
+            ? item.ibm_agreement_number
+            : ""
+        }}
+      </template>
+      <template v-slot:[`item.ibm_customer_number`]="{ item, index }">
+        {{
+          isFirstOccurrence(
+            "ibm_customer_number",
+            item.ibm_customer_number,
+            index
+          )
+            ? item.ibm_customer_number
+            : ""
+        }}
+      </template>
+
+      <!-- Template for IBM Order Reference Number -->
+      <template v-slot:[`item.ibm_order_ref_number`]="{ item, index }">
+        {{
+          isFirstOccurrence(
+            "ibm_order_ref_number",
+            item.ibm_order_ref_number,
+            index
+          )
+            ? item.ibm_order_ref_number
+            : ""
+        }}
+      </template>
+
+      <!-- Template for IBM Order Reference Date -->
+      <template v-slot:[`item.ibm_order_ref_date`]="{ item, index }">
+        {{
+          isFirstOccurrence(
+            "ibm_order_ref_date",
+            item.ibm_order_ref_date,
+            index
+          )
+            ? item.ibm_order_ref_date
+            : ""
+        }}
       </template>
     </v-data-table>
 
@@ -82,12 +223,14 @@ import axios from "axios";
 import * as PDFJS from "pdfjs-dist";
 import Tesseract from "tesseract.js";
 import pdfjsWorker from "../../node_modules/pdfjs-dist/build/pdf.worker.mjs";
+import { mapState } from "vuex";
 
 PDFJS.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
 export default {
   name: "UploadPdfFile",
   data() {
+    const currentDate = new Date();
     return {
       selectedFile: null,
       file: null,
@@ -95,7 +238,7 @@ export default {
       ibmSiteNumber: "",
       ibmCustomerNumber: "",
       ibmOrderRefNumber: "",
-      ibmOrderRefDate: "",
+      ibmOrderRefDate: currentDate,
       pdfFiles: [],
       snackbar: {
         show: false,
@@ -133,9 +276,23 @@ export default {
         {
           title: "License",
           text: "License",
-          value: "selected_licenses",
+          value: "selected_license",
         },
-        { title: "Date", text: "Date", value: "date" },
+        {
+          title: "Quantity",
+          text: "Quantity",
+          value: "quantity",
+        },
+        {
+          title: "Start Date",
+          text: "Start Date",
+          value: "start_date",
+        },
+        {
+          title: "End Date",
+          text: "End Date",
+          value: "end_date",
+        },
         {
           title: "Actions",
           text: "Actions",
@@ -150,25 +307,111 @@ export default {
         },
       ],
       tableData: [], // New variable to hold table data
-      selectedLicenses: [],
+      selectedLicenses: [{ id: Date.now(), value: "" }],
+      quantity: [""],
+      start_date: [currentDate, currentDate],
+      end_date: [currentDate, currentDate],
+      menu: false,
+      previousFilename: null,
     };
   },
+  computed: {
+    ...mapState(["username"]),
+    formattedStartDate() {
+      return this.start_date.map((date) => {
+        if (!date) return ""; // Return empty string if date is not defined
+        const d = new Date(date);
+        const day = d.getDate().toString().padStart(2, "0");
+        const month = (d.getMonth() + 1).toString().padStart(2, "0");
+        const year = d.getFullYear().toString();
+        return `${day}-${month}-${year}`;
+      });
+    },
+    formattedEndDate() {
+      return this.end_date.map((date) => {
+        if (!date) return ""; // Return empty string if date is not defined
+        const d = new Date(date);
+        const day = d.getDate().toString().padStart(2, "0");
+        const month = (d.getMonth() + 1).toString().padStart(2, "0");
+        const year = d.getFullYear().toString();
+        return `${day}-${month}-${year}`;
+      });
+    },
+    formattedibmOrderRefDate() {
+      if (!this.ibmOrderRefDate) return ""; // Return empty string if date is not defined
+      const d = new Date(this.ibmOrderRefDate);
+      const day = d.getDate().toString().padStart(2, "0");
+      const monthNames = [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+      ];
+      const month = monthNames[d.getMonth()];
+      const year = d.getFullYear();
+      return `${day}-${month}-${year}`;
+    },
+  },
   methods: {
+    formatDate(date) {
+      if (!date) return ""; // Return empty string if date is not defined
+      const d = new Date(date);
+      const day = d.getDate().toString().padStart(2, "0");
+      const month = (d.getMonth() + 1).toString().padStart(2, "0");
+      const year = d.getFullYear();
+      return `${day}-${month}-${year}`;
+    },
+    isFirstOccurrence(key, value, index) {
+      for (let i = 0; i < index; i++) {
+        if (this.pdfFiles[i][key] === value) {
+          return false; // Not the first occurrence
+        }
+      }
+      return true; // First occurrence
+    },
+    addColumn() {
+      // Add an empty column to selectedLicenses array
+      this.selectedLicenses.push({ id: Date.now(), value: "" });
+
+      // Add corresponding empty items to other arrays
+      this.quantity.push("");
+      this.start_date.push(new Date());
+      this.end_date.push(new Date());
+    },
+
+    deleteLicense() {
+      // Check if there are items in the arrays to delete
+      if (this.selectedLicenses.length > 0 && this.quantity.length > 0) {
+        // Delete the last item from both arrays
+        this.selectedLicenses.pop();
+        this.quantity.pop();
+      }
+    },
+
     async fetchTableData() {
       try {
         const response = await axios.get(
-          `${process.env.SERVER_NAME}/api/table-data-license`
+          `${process.env.SERVER_NAME}/api/table-data-license`,
+          {
+            params: {
+              username: this.username, // Include username in the request
+            },
+          }
         );
         this.tableData = response.data;
       } catch (error) {
         throw new Error("Error fetching table data.");
       }
     },
-    addLineBreaks(licenses) {
-      // Remove curly braces and quotes from the text, split by comma, and join the elements with a comma and a new line character
-      const formattedLicenses = licenses.replace(/["{}]/g, "").split(",");
-      return formattedLicenses.join("<br>");
-    },
+
     handleFileUpload(event) {
       this.file = event.target.files[0];
       this.fetchTableData();
@@ -185,16 +428,21 @@ export default {
       formData.append("ibmSiteNumber", this.ibmSiteNumber);
       formData.append("ibmCustomerNumber", this.ibmCustomerNumber);
       formData.append("ibmOrderRefNumber", this.ibmOrderRefNumber);
-      formData.append("ibmOrderRefDate", this.ibmOrderRefDate);
-      formData.append(
-        "selectedLicenses",
-        JSON.stringify(this.selectedLicenses)
-      );
+      formData.append("ibmOrderRefDate", this.formattedibmOrderRefDate);
+      this.selectedLicenses.forEach((license, index) => {
+        formData.append(`selectedLicenses[${index}]`, license.value);
+        formData.append(`quantity[${index}]`, this.quantity[index]);
+        formData.append(`start_date[${index}]`, this.formattedStartDate[index]);
+        formData.append(`end_date[${index}]`, this.formattedEndDate[index]);
+      });
 
       axios
         .post(`${process.env.SERVER_NAME}/api/upload-pdf`, formData, {
           headers: {
             "Content-Type": "multipart/form-data",
+          },
+          params: {
+            username: this.username, // Include username in the request
           },
         })
         .then(() => {
@@ -207,8 +455,9 @@ export default {
           this.ibmCustomerNumber = "";
           this.ibmOrderRefNumber = "";
           this.ibmOrderRefDate = "";
-          // Clear selectedLicenses
-          this.selectedLicenses = [];
+          // Clear selectedLicenses and quantity
+          this.selectedLicenses = [{ id: Date.now(), value: "" }];
+          this.quantity = [""];
           // Refresh the PDF files list
           this.fetchPDFFiles();
         })
@@ -217,17 +466,29 @@ export default {
         });
     },
     deleteFile(id) {
+      // Get the file name of the file being deleted
+      const fileNameToDelete = this.pdfFiles.find(
+        (file) => file.id === id
+      ).filename;
+
       axios
-        .delete(`${process.env.SERVER_NAME}/api/delete-pdf/${id}`)
+        .delete(`${process.env.SERVER_NAME}/api/delete-pdf/${id}`, {
+          params: {
+            username: this.username, // Include username in the request
+          },
+        })
         .then(() => {
           this.showSnackbar("File deleted successfully", "success");
-          // Refresh the PDF files list
-          this.fetchPDFFiles();
+          // Remove all files with the same name as the deleted file
+          this.pdfFiles = this.pdfFiles.filter(
+            (file) => file.filename !== fileNameToDelete
+          );
         })
         .catch(() => {
           this.showSnackbar("Error deleting file", "error");
         });
     },
+
     openURL(url) {
       window.open(url, "_blank");
     },
@@ -238,15 +499,23 @@ export default {
     },
     fetchPDFFiles() {
       axios
-        .get(`${process.env.SERVER_NAME}/api/get-pdf-files`)
+        .get(`${process.env.SERVER_NAME}/api/get-pdf-files`, {
+          params: {
+            username: this.username, // Include username in the request
+          },
+        })
         .then((response) => {
-          this.pdfFiles = response.data;
-          // console.log(this.pdfFiles);
+          // Sort the response data by increasing order based on a specific property (e.g., filename)
+          this.pdfFiles = response.data.sort((a, b) => {
+            // Assuming you want to sort by filename, adjust the property accordingly
+            return a.filename.localeCompare(b.filename);
+          });
         })
         .catch(() => {
-          this.showSnackbar("Error deleting file", "error");
+          this.showSnackbar("Error fetching PDF files", "error");
         });
     },
+
     rearrangeText(text) {
       // Define a mapping of expected keys to their actual variations
       const keyMappings = {
@@ -320,7 +589,9 @@ export default {
             this.ibmCustomerNumber = rearrangedValues["IBM Customer Number"];
             this.ibmOrderRefNumber =
               rearrangedValues["IBM Order Reference Number"];
-            this.ibmOrderRefDate = rearrangedValues["IBM Order Reference Date"];
+            const formattedDate = rearrangedValues["IBM Order Reference Date"];
+            const [day, month, year] = formattedDate.split("-");
+            this.ibmOrderRefDate = new Date(`${month} ${day}, ${year}`);
           });
         } catch (error) {
           console.error("Error loading PDF:", error);

@@ -4,12 +4,16 @@ import alltabledata from "../components/GetAllTable.vue";
 
 <template>
   <v-container>
+    <v-col class="text-left">
+      <h2>Upload CSV</h2>
+    </v-col>
     <v-row>
       <v-col cols="4">
         <v-select
           v-model="environment"
           :items="environmentOptions"
           label="Environment"
+          variant="outlined"
         ></v-select>
       </v-col>
 
@@ -18,6 +22,7 @@ import alltabledata from "../components/GetAllTable.vue";
           v-model="selectedMonth"
           :items="monthOptions"
           label="Select a Month"
+          variant="outlined"
         ></v-select>
       </v-col>
 
@@ -26,6 +31,7 @@ import alltabledata from "../components/GetAllTable.vue";
           v-model="selectedYear"
           :items="yearOptions"
           label="Select a year"
+          variant="outlined"
         ></v-select>
       </v-col>
     </v-row>
@@ -35,6 +41,7 @@ import alltabledata from "../components/GetAllTable.vue";
       label="Upload CSV"
       accept=".csv"
       @change="handleFileUpload"
+      variant="outlined"
     ></v-file-input>
 
     <v-col class="text-right">
@@ -54,6 +61,7 @@ import alltabledata from "../components/GetAllTable.vue";
 
 <script>
 import axios from "axios";
+import { mapState } from "vuex";
 
 export default {
   data() {
@@ -84,11 +92,14 @@ export default {
       ),
     };
   },
+  computed: {
+    ...mapState(["username"]),
+  },
   created() {
     // Initialize selectedYear and selectedMonth with the current year and month
     const currentDate = new Date();
     this.selectedYear = currentDate.getFullYear();
-    this.selectedMonth = currentDate.getMonth() + 1; // Adding 1 to match with human-readable months (January is 1)
+    this.selectedMonth = currentDate.getMonth(); // Adding 1 to match with human-readable months (January is 1)
   },
   methods: {
     handleFileUpload(event) {
@@ -112,7 +123,11 @@ export default {
       }
 
       axios
-        .get(`${process.env.SERVER_NAME}/api/check-filename/${tableName}`)
+        .get(`${process.env.SERVER_NAME}/api/check-filename/${tableName}`, {
+          params: {
+            username: this.username,
+          },
+        })
         .then((response) => {
           if (response.data.exists) {
             this.showSnackbar(
@@ -128,6 +143,7 @@ export default {
           this.showSnackbar("Error checking filename", "error");
         });
     },
+
     uploadFile() {
       if (!this.file) {
         this.showSnackbar("No file selected", "error");
@@ -150,6 +166,9 @@ export default {
 
       axios
         .post(`${process.env.SERVER_NAME}/api/upload-csv`, formData, {
+          params: {
+            username: this.username,
+          },
           headers: {
             "Content-Type": "multipart/form-data",
           },
@@ -164,6 +183,7 @@ export default {
           this.showSnackbar("Error uploading file", "error");
         });
     },
+
     checkAndUploadFile() {
       this.checkFilenameWithBackend();
     },

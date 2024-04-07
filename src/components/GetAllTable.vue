@@ -52,6 +52,7 @@
 
 <script>
 import axios from "axios";
+import { mapState } from "vuex";
 
 export default {
   name: "TableList",
@@ -83,10 +84,17 @@ export default {
       ],
     };
   },
+  computed: {
+    ...mapState(["username"]),
+  },
   methods: {
     fetchTableNames() {
       axios
-        .get(`${process.env.SERVER_NAME}/api/table-names`)
+        .get(`${process.env.SERVER_NAME}/api/table-names`, {
+          params: {
+            username: this.username
+          }
+        })
         .then((response) => {
           // Extract table names from the response and sort them alphabetically
           const allTableNames = response.data.sort();
@@ -119,7 +127,11 @@ export default {
     deleteTable(item) {
       const tableName = item.tableName;
       axios
-        .delete(`${process.env.SERVER_NAME}/api/delete-table/${tableName}`)
+        .delete(`${process.env.SERVER_NAME}/api/delete-table/${tableName}`, {
+          params: {
+            username: this.username
+          }
+        })
         .then(() => {
           this.showSnackbar("Table deleted successfully", "success");
           // Refresh the table names list
@@ -142,3 +154,4 @@ export default {
   },
 };
 </script>
+

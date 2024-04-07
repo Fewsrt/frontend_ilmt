@@ -1,83 +1,106 @@
+<script setup>
+import calresults from "../components/ReportData.vue";
+</script>
+
 <template>
   <v-container>
     <v-row>
-      <v-col cols="12">
-        <v-select
-          v-model="selectedTable"
-          :items="filteredTableNames"
-          label="Select Table"
-          outlined
-          dense
-        ></v-select>
+      <v-col cols="6">
+        <v-col class="text-left">
+          <h2>Calculation Data</h2>
+        </v-col>
+        <v-row>
+          <v-col cols="12">
+            <v-select
+              v-model="selectedTable"
+              :items="filteredTableNames"
+              label="Select Table"
+              outlined
+              dense
+              variant="outlined"
+            ></v-select>
+          </v-col>
+        </v-row>
+        <v-row>
+          <v-col cols="12">
+            <v-select
+              v-model="selectedComponentNames"
+              :items="componentNamesList"
+              label="Component Name"
+              outlined
+              dense
+              multiple
+              variant="outlined"
+            ></v-select>
+          </v-col>
+        </v-row>
+        <!-- Add a button to trigger the calculation -->
+        <v-row>
+          <v-col cols="12" class="text-center">
+            <v-btn @click="calculateData" color="primary">Calculate</v-btn>
+          </v-col>
+        </v-row>
+        <!-- Show the card boxes with calculation results if calculationResults is not null -->
+        <v-row
+          v-if="calculationResults !== null && calculationResults.length > 0"
+        >
+          <v-col
+            v-for="(result, index) in calculationResults"
+            :key="index"
+            cols="12"
+          >
+            <v-card>
+              <v-card-title
+                >Calculator: {{ result.componentName }}</v-card-title
+              >
+              <v-card-text>
+                <div>Component Name: {{ result.componentName }}</div>
+                <div>Product Metric: {{ result.productmetric }}</div>
+                <!-- Only render the div if pvuMin is present -->
+                <div v-if="result.pvuMin !== undefined">
+                  Minimum License PVU: {{ result.pvuMin }}
+                </div>
+                <!-- Only render the div if pvuMax is present -->
+                <div v-if="result.pvuMax !== undefined">
+                  Maximum License PVU: {{ result.pvuMax }}
+                </div>
+                <!-- Only render the div if LicenseVPC is present -->
+                <div v-if="result.LicenseVPC !== undefined">
+                  License VPC: {{ result.LicenseVPC }}
+                </div>
+                <div v-if="result.LPARLicense !== undefined">
+                  LPAR License: {{ result.LPARLicense }}
+                </div>
+                <div v-if="result.NonLPARLicense !== undefined">
+                  Non LPAR License: {{ result.NonLPARLicense }}
+                </div>
+              </v-card-text>
+            </v-card>
+          </v-col>
+        </v-row>
+        <!-- Show an alert if calculationResults is null -->
+        <v-row v-else-if="calculationResults === null">
+          <v-col cols="12">
+            <v-alert color="warning"
+              >Please calculate the results first.</v-alert
+            >
+          </v-col>
+        </v-row>
+        <!-- Show an alert if calculationResults is an empty array -->
+        <v-row v-else>
+          <v-col cols="12">
+            <v-alert color="info">No calculation results found.</v-alert>
+          </v-col>
+        </v-row>
+        <v-row v-if="showSaveButton" class="text-center">
+          <v-col cols="12">
+            <v-btn @click="cancel" class="mr-2" color="warning">Cancel</v-btn>
+            <v-btn @click="saveData" color="primary">Save</v-btn>
+          </v-col>
+        </v-row>
       </v-col>
-    </v-row>
-    <v-row>
-      <v-col cols="12">
-        <v-select
-          v-model="selectedComponentNames"
-          :items="componentNamesList"
-          label="Component Name"
-          outlined
-          dense
-          multiple
-        ></v-select>
-      </v-col>
-    </v-row>
-    <!-- Add a button to trigger the calculation -->
-    <v-row>
-      <v-col cols="12">
-        <v-btn @click="calculateData" color="primary">Calculate</v-btn>
-      </v-col>
-    </v-row>
-    <!-- Show the card boxes with calculation results if calculationResults is not null -->
-    <v-row v-if="calculationResults !== null && calculationResults.length > 0">
-      <v-col
-        v-for="(result, index) in calculationResults"
-        :key="index"
-        cols="12"
-        sm="6"
-      >
-        <v-card>
-          <v-card-title>Calculator: {{ result.componentName }}</v-card-title>
-          <v-card-text>
-            <div>Component Name: {{ result.componentName }}</div>
-            <!-- Only render the div if pvuMin is present -->
-            <div v-if="result.pvuMin !== undefined">
-              Minimum License PVU: {{ result.pvuMin }}
-            </div>
-            <!-- Only render the div if pvuMax is present -->
-            <div v-if="result.pvuMax !== undefined">
-              Maximum License PVU: {{ result.pvuMax }}
-            </div>
-            <!-- Only render the div if LicenseVPC is present -->
-            <div v-if="result.LicenseVPC !== undefined">
-              License VPC: {{ result.LicenseVPC }}
-            </div>
-            <div v-if="result.LPARLicense !== undefined">
-              LPAR License: {{ result.LPARLicense }}
-            </div>
-            <div v-if="result.NonLPARLicense !== undefined">
-              Non LPAR License: {{ result.NonLPARLicense }}
-            </div>
-          </v-card-text>
-        </v-card>
-      </v-col>
-    </v-row>
-    <!-- Show an alert if calculationResults is null -->
-    <v-row v-else-if="calculationResults === null">
-      <v-col cols="12">
-        <v-alert color="warning">Please calculate the results first.</v-alert>
-      </v-col>
-    </v-row>
-    <!-- Show an alert if calculationResults is an empty array -->
-    <v-row v-else>
-      <v-col cols="12">
-        <v-alert color="info">No calculation results found.</v-alert>
-      </v-col>
-    </v-row>
-    <v-row v-if="showSaveButton">
-      <v-col cols="12">
-        <v-btn @click="saveData" color="primary">Save</v-btn>
+      <v-col cols="6">
+        <calresults></calresults>
       </v-col>
     </v-row>
   </v-container>
@@ -85,6 +108,7 @@
 
 <script>
 import axios from "axios";
+import { mapState } from "vuex";
 
 export default {
   name: "TableSelector",
@@ -105,6 +129,7 @@ export default {
     };
   },
   computed: {
+    ...mapState(["username"]),
     filteredHeaders() {
       // Filter tableHeaders based on selectedColumns
       return this.tableHeaders.filter((header) =>
@@ -123,10 +148,12 @@ export default {
     },
     filteredTableNames() {
       // Filter tableNames based on conditions
-      return this.tableNames.filter(
-        (tableName) =>
-          tableName.includes("develop") || tableName.includes("production")
-      ).sort();
+      return this.tableNames
+        .filter(
+          (tableName) =>
+            tableName.includes("develop") || tableName.includes("production")
+        )
+        .sort();
     },
   },
   watch: {
@@ -146,8 +173,13 @@ export default {
       this.snackbar.show = true;
     },
     fetchTableNames() {
+      // Inside your fetchTableNames method and any other method where you make Axios requests
       axios
-        .get(`${process.env.SERVER_NAME}/api/table-names`)
+        .get(`${process.env.SERVER_NAME}/api/table-names`, {
+          params: {
+            username: this.username, // Include username in the request parameters
+          },
+        })
         .then((response) => {
           this.tableNames = response.data;
         })
@@ -158,7 +190,11 @@ export default {
     fetchTableData(tableName) {
       this.isLoading = true;
       axios
-        .get(`${process.env.SERVER_NAME}/api/table-data/${tableName}`)
+        .get(`${process.env.SERVER_NAME}/api/table-data/${tableName}`, {
+          params: {
+            username: this.username, // Include username in the request parameters
+          },
+        })
         .then((response) => {
           this.tableData = response.data;
           this.tableHeaders = Object.keys(response.data[0]).map((key) => ({
@@ -174,7 +210,7 @@ export default {
           // Populate the componentNamesList for the multi-select
           this.componentNamesList = [
             ...new Set(response.data.map((row) => row["Component Name"])),
-          ];
+          ].sort((a, b) => a.localeCompare(b));
         })
         .catch(() => {
           this.showSnackbar(
@@ -236,6 +272,7 @@ export default {
               componentName: componentName.trim(),
               pvuMax: totalPVUMax,
               pvuMin: totalPVUMin,
+              productmetric: relevantRows[0]["Product Metric"], // Add product metric
             });
           } else if (
             componentName.trim() ===
@@ -293,6 +330,7 @@ export default {
               componentName: relevantRows[0]["Component Name"],
               pvuMax: totalPVUMax,
               pvuMin: totalPVUMin,
+              productmetric: relevantRows[0]["Product Metric"], // Add product metric
             });
           } else if (componentName.trim() === "IBM MQ Advanced") {
             relevantRows.forEach((row) => {
@@ -330,6 +368,7 @@ export default {
             this.calculationResults.push({
               componentName: componentName.trim(),
               LicenseVPC: totalVPC,
+              productmetric: relevantRows[0]["Product Metric"], // Add product metric
             });
           } else if (
             componentName.trim() ===
@@ -342,7 +381,7 @@ export default {
 
             // Iterate over relevant rows to find the row that meets the condition
             relevantRows.forEach((row) => {
-              const key = `${row["Computer Name"]}_${row["Server Cores"]}`;
+              const key = `${row["Server Serial Number"]}_${row["Server Cores"]}`;
               if (!uniqueConditions.has(key)) {
                 foundRow = row;
                 uniqueConditions.add(key);
@@ -366,18 +405,18 @@ export default {
 
             this.calculationResults.push({
               componentName: foundRow["Component Name"],
-              LPARLicense: LPARLicense, // Combined LPAR license
-              NonLPARLicense: NonLPARLicense, // Showing in text as Non-LPAR License
+              productmetric: foundRow["Product Metric"],
+              LPARLicense: LPARLicense,
+              NonLPARLicense: NonLPARLicense,
             });
           }
           this.showSaveButton = true;
         }
       });
     },
+
     saveData() {
-      // Check if calculation results exist and are not empty
       if (this.calculationResults && this.calculationResults.length > 0) {
-        // Prepare data to store in the database
         const dataToStore = this.calculationResults.map((result) => ({
           tablename: this.selectedTable,
           componentName: result.componentName.trim(),
@@ -386,29 +425,34 @@ export default {
           LicenseVPC: result.LicenseVPC,
           LPARLicense: result.LPARLicense,
           NonLPARLicense: result.NonLPARLicense,
-          date: this.formatDate(new Date()), // Current date and time
+          date: this.formatDate(new Date()),
         }));
-
-        // Make a POST request to your API endpoint to store data in PostgreSQL
         axios
-          .post(`${process.env.SERVER_NAME}/api/store-results`, dataToStore)
-          .then((response) => {
-            console.log("Results stored successfully:", response.data);
-            // Optionally, you can reset the calculationResults or show a success message here
+          .post(`${process.env.SERVER_NAME}/api/store-results`, dataToStore, {
+            params: {
+              username: this.username,
+            },
+          })
+          .then(() => {
+            this.showSnackbar("Results stored successfully", "success");
           })
           .catch((error) => {
             console.error("Error storing results:", error);
-            // Handle error, show error message, etc.
           });
       } else {
-        // If calculation results do not exist or are empty, show a message or perform an action accordingly
-        console.warn("No calculation results to save.");
-        // Optionally, you can show a message to the user indicating there are no results to save
+        this.showSnackbar("No calculation results to save", "warning");
       }
+    },
+    cancel() {
+      // Reset selectedTable and selectedComponentNames to null
+      this.selectedTable = null;
+      this.selectedComponentNames = [];
+      this.calculationResults = null;
+      this.showSaveButton = false;
     },
     formatDate(date) {
       const year = date.getFullYear();
-      const month = (date.getMonth() + 1).toString().padStart(2, "0"); // Months are zero indexed
+      const month = (date.getMonth() + 1).toString().padStart(2, "0");
       const day = date.getDate().toString().padStart(2, "0");
       const hours = date.getHours().toString().padStart(2, "0");
       const minutes = date.getMinutes().toString().padStart(2, "0");
@@ -417,7 +461,3 @@ export default {
   },
 };
 </script>
-
-<style>
-/* Add custom styles here */
-</style>

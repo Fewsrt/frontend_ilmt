@@ -1,5 +1,8 @@
 <template>
-  <div>
+  <v-container>
+    <v-col class="text-left">
+      <h2>View Data</h2>
+    </v-col>
     <v-row>
       <v-col cols="12">
         <v-select
@@ -8,6 +11,7 @@
           label="Select Table"
           outlined
           dense
+          variant="outlined"
         ></v-select>
       </v-col>
     </v-row>
@@ -22,6 +26,7 @@
           multiple
           item-text="text"
           item-value="value"
+          variant="outlined"
         ></v-select>
         <div class="spacer"></div>
         <v-btn
@@ -75,11 +80,12 @@
         >
       </v-col>
     </v-row>
-  </div>
+  </v-container>
 </template>
 
 <script>
 import axios from "axios";
+import { mapState } from "vuex";
 
 export default {
   data() {
@@ -118,6 +124,7 @@ export default {
         return filteredRow;
       });
     },
+    ...mapState(["username"]),
   },
   watch: {
     selectedTable(newValue) {
@@ -140,7 +147,11 @@ export default {
     },
     fetchTableNames() {
       axios
-        .get(`${process.env.SERVER_NAME}/api/table-names`)
+        .get(`${process.env.SERVER_NAME}/api/table-names`, {
+          params: {
+            username: this.username,
+          },
+        })
         .then((response) => {
           this.tableNames = response.data;
         })
@@ -151,7 +162,11 @@ export default {
     fetchTableData(tableName) {
       this.isLoading = true;
       axios
-        .get(`${process.env.SERVER_NAME}/api/table-data/${tableName}`)
+        .get(`${process.env.SERVER_NAME}/api/table-data/${tableName}`, {
+          params: {
+            username: this.username,
+          },
+        })
         .then((response) => {
           this.tableData = response.data;
           this.tableHeaders = Object.keys(response.data[0]).map((key) => ({

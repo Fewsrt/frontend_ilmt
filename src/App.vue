@@ -1,64 +1,86 @@
 <template>
   <v-app>
-    <v-app-bar app color="primary" prominent>
-      <v-app-bar-nav-icon @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
-      <v-toolbar-title>IBM License Metric Tool</v-toolbar-title>
+    <v-app-bar app color="primary" prominent v-if="showNavigation">
+      <template v-if="showNavigation">
+        <v-app-bar-nav-icon @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
+      </template>
+      <v-toolbar-title
+        >IBM License Metric Tool Customer : {{ this.username }}</v-toolbar-title
+      >
       <v-spacer></v-spacer>
-      <v-btn variant="text" icon="mdi-magnify" link to="/findtabledata"></v-btn>
+      <template v-if="showNavigation">
+        <v-btn variant="text" icon="mdi-magnify" :to="'/findtabledata'"></v-btn>
+        <v-btn text @click="logout">Exit</v-btn>
+      </template>
     </v-app-bar>
     <v-navigation-drawer v-model="drawer" location="left" temporary>
       <v-list>
-        <v-list-item link to="/">
+        <v-list-item :to="`/home`">
           <v-list-item-title>Home</v-list-item-title>
         </v-list-item>
-        <v-list-item link to="/licensemapping">
+        <v-list-item :to="`/licensemapping`">
           <v-list-item-title>License</v-list-item-title>
         </v-list-item>
-        <v-list-item link to="/calculator">
+        <v-list-item :to="`/calculator`">
           <v-list-item-title>Calculator</v-list-item-title>
         </v-list-item>
-        <v-list-item link to="/uploadpdf">
+        <v-list-item :to="`/uploadpdf`">
           <v-list-item-title>Upload PDF</v-list-item-title>
         </v-list-item>
-        <v-list-item link to="/uploadcsv">
+        <v-list-item :to="`/uploadcsv`">
           <v-list-item-title>Upload CSV</v-list-item-title>
-        </v-list-item>
-        <v-list-item link to="/reportdata">
-          <v-list-item-title>Report</v-list-item-title>
         </v-list-item>
       </v-list>
     </v-navigation-drawer>
-    <!-- Add padding to content to prevent it from being behind the app bar -->
     <v-main>
       <v-container>
         <router-view></router-view>
       </v-container>
     </v-main>
+    <v-footer app>
+      <span class="mr-2 ml-auto"
+        >&copy; {{ new Date().getFullYear() }} —
+        <strong>Datapro Computer System</strong></span
+      >
+    </v-footer>
   </v-app>
 </template>
 
-<script setup>
-import { ref, watch } from "vue";
-
-const drawer = ref(false);
-const group = ref(null);
-
-watch(group, () => {
-  drawer.value = false;
-});
-</script>
-
 <script>
-export default {
-  data: () => ({
-    drawer: false,
-    group: null,
-  }),
+import axios from "axios";
+import { mapState } from "vuex";
 
+export default {
+  name: "App",
+  data() {
+    return {
+      drawer: false,
+      showNavigation: true,
+    };
+  },
+  computed: {
+    ...mapState(["username"]),
+  },
   watch: {
-    group() {
-      this.drawer = false;
+    $route() {
+      this.updateNavigationVisibility();
     },
+  },
+  methods: {
+    updateNavigationVisibility() {
+      this.showNavigation = this.$route.path !== "/";
+    },
+    async logout() {
+      try {
+        await axios.post(`${process.env.SERVER_NAME}/logout`);
+        this.$router.push("/");
+      } catch (error) {
+        console.error("Error logging out:", error);
+      }
+    },
+  },
+  created() {
+    this.updateNavigationVisibility();
   },
 };
 </script>

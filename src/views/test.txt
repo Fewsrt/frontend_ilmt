@@ -1,0 +1,863 @@
+<template>
+  <div>
+    <v-container>
+      <!-- <v-btn color="primary" @click="saveData">Save Data</v-btn> -->
+      <v-row>
+        <v-col cols="6">
+          <v-col>
+            <h3>Previous Month</h3>
+            <v-select
+              v-model="selectedMonthPrev"
+              :items="monthOptions"
+              label="Select a Month"
+            ></v-select>
+          </v-col>
+          <v-col>
+            <v-select
+              v-model="selectedYearPrev"
+              :items="yearOptions"
+              label="Select a year"
+            ></v-select>
+          </v-col>
+          <v-col v-for="(item, index) in matchedDataPrev" :key="index">
+            <v-card>
+              <v-card-title>{{ item.product_name }}</v-card-title>
+              <v-card-text>
+                <div>License Name: {{ item.license_name }}</div>
+                <div>
+                  Software License or Appliance Quantity:
+                  {{ item["Software License or Appliance Quantity"] }}
+                </div>
+                <div>
+                  Active Subscription & Support Quantity:
+                  {{ item["Active Subscription & Support Quantity"] }}
+                </div>
+                <div>
+                  Data Collection:
+                  {{ item.data_collection }}
+                </div>
+                <div v-if="item.pvu_min !== 0">
+                  <v-divider></v-divider>
+                  Minimum License PVU: {{ item.pvu_min }}
+                </div>
+                <div v-if="item.pvu_min_production !== null">
+                  Production: {{ item.pvu_min_production }}
+                </div>
+                <div v-if="item.pvu_min_develop !== null">
+                  Develop: {{ item.pvu_min_develop }}
+                </div>
+                <div v-if="item.license_vpc !== 0">
+                  <v-divider></v-divider>
+                  License VPC: {{ item.license_vpc }}
+                </div>
+                <div v-if="item.license_vpc_production !== null">
+                  Production: {{ item.license_vpc_production }}
+                </div>
+                <div v-if="item.license_vpc_develop !== null">
+                  Develop: {{ item.license_vpc_develop }}
+                </div>
+                <div v-if="item.lpar_license !== 0">
+                  <v-divider></v-divider>
+                  LPAR License: {{ item.lpar_license }}
+                </div>
+                <div v-if="item.lpar_license_production !== null">
+                  Production: {{ item.lpar_license_production }}
+                </div>
+                <div v-if="item.lpar_license_develop !== null">
+                  Develop: {{ item.lpar_license_develop }}
+                </div>
+                <div v-if="item.non_lpar_license !== 0">
+                  <v-divider></v-divider>
+                  Non LPAR License: {{ item.non_lpar_license }}
+                </div>
+                <div v-if="item.non_lpar_license_production !== null">
+                  Production:
+                  {{ item.non_lpar_license_production }}
+                </div>
+                <div v-if="item.non_lpar_license_develop !== null">
+                  Develop: {{ item.non_lpar_license_develop }}
+                </div>
+                <div v-if="item.Total_License !== 0">
+                  <v-divider></v-divider>
+                  Total License: {{ item.Total_License }}
+                </div>
+                <v-divider></v-divider>
+                <div>Date: {{ item.calculation_date }}</div>
+                <div>
+                  <div class="text-right">
+                    <v-btn
+                      :color="
+                        item.data_collection <= getActiveSubscription(item)
+                          ? 'success'
+                          : 'error'
+                      "
+                      text
+                      depressed
+                    >
+                      {{
+                        item.data_collection <= getActiveSubscription(item)
+                          ? "Covered"
+                          : "Not Covered"
+                      }}
+                    </v-btn>
+                  </div>
+                </div>
+              </v-card-text>
+            </v-card>
+          </v-col>
+        </v-col>
+
+        <v-col cols="6">
+          <v-col>
+            <h3>Current Month</h3>
+            <v-select
+              v-model="selectedMonthCurr"
+              :items="monthOptions"
+              label="Select a Month"
+            ></v-select>
+          </v-col>
+
+          <v-col>
+            <v-select
+              v-model="selectedYearCurr"
+              :items="yearOptions"
+              label="Select a year"
+            ></v-select>
+          </v-col>
+          <v-col v-for="(item, index) in matchedDataCurr" :key="index">
+            <v-card>
+              <v-card-title>{{ item.product_name }}</v-card-title>
+              <v-card-text>
+                <div>License Name: {{ item.license_name }}</div>
+                <div>
+                  Software License or Appliance Quantity:
+                  {{ item["Software License or Appliance Quantity"] }}
+                </div>
+                <div>
+                  Active Subscription & Support Quantity:
+                  {{ item["Active Subscription & Support Quantity"] }}
+                </div>
+                <div>
+                  Data Collection:
+                  {{ item.data_collection }}
+                </div>
+                <div v-if="item.pvu_min !== 0">
+                  <v-divider></v-divider>
+                  Minimum License PVU: {{ item.pvu_min }}
+                </div>
+                <div v-if="item.pvu_min_production !== null">
+                  Production: {{ item.pvu_min_production }}
+                </div>
+                <div v-if="item.pvu_min_develop !== null">
+                  Develop: {{ item.pvu_min_develop }}
+                </div>
+                <div v-if="item.license_vpc !== 0">
+                  <v-divider></v-divider>
+                  License VPC: {{ item.license_vpc }}
+                </div>
+                <div v-if="item.license_vpc_production !== null">
+                  Production: {{ item.license_vpc_production }}
+                </div>
+                <div v-if="item.license_vpc_develop !== null">
+                  Develop: {{ item.license_vpc_develop }}
+                </div>
+                <div v-if="item.lpar_license !== 0">
+                  <v-divider></v-divider>
+                  LPAR License: {{ item.lpar_license }}
+                </div>
+                <div v-if="item.lpar_license_production !== null">
+                  Production: {{ item.lpar_license_production }}
+                </div>
+                <div v-if="item.lpar_license_develop !== null">
+                  Develop: {{ item.lpar_license_develop }}
+                </div>
+                <div v-if="item.non_lpar_license !== 0">
+                  <v-divider></v-divider>
+                  Non LPAR License: {{ item.non_lpar_license }}
+                </div>
+                <div v-if="item.non_lpar_license_production !== null">
+                  Production:
+                  {{ item.non_lpar_license_production }}
+                </div>
+                <div v-if="item.non_lpar_license_develop !== null">
+                  Develop: {{ item.non_lpar_license_develop }}
+                </div>
+                <div v-if="item.Total_License !== 0">
+                  <v-divider></v-divider>
+                  Total License: {{ item.Total_License }}
+                </div>
+                <v-divider></v-divider>
+                <div>Date: {{ item.calculation_date }}</div>
+                <div>
+                  <div class="text-right">
+                    <v-btn
+                      :color="
+                        item.data_collection <= getActiveSubscription(item)
+                          ? 'success'
+                          : 'error'
+                      "
+                      text
+                      depressed
+                    >
+                      {{
+                        item.data_collection <= getActiveSubscription(item)
+                          ? "Covered"
+                          : "Not Covered"
+                      }}
+                    </v-btn>
+                  </div>
+                </div>
+              </v-card-text>
+            </v-card>
+          </v-col>
+        </v-col>
+      </v-row>
+      <v-snackbar
+        v-model="snackbar.show"
+        :timeout="snackbar.timeout"
+        :color="snackbar.color"
+      >
+        {{ snackbar.message }}
+      </v-snackbar>
+    </v-container>
+  </div>
+</template>
+
+<script>
+import axios from "axios";
+
+export default {
+  data() {
+    return {
+      mappingLicenseData: [],
+      passportAdvantageData: [],
+      calculationResultsData: [],
+      isLoading: false,
+      matchedDataCurr: [], // Array to hold the matched data
+      matchedDataPrev: [],
+      selectedMonthCurr: null, // New property for selected Month
+      selectedMonthPrev: null,
+      monthOptions: Array.from({ length: 12 }, (_, i) => i + 1), // Array to hold Months from 1 to 12
+      selectedYearCurr: null, // New property for selected year
+      selectedYearPrev: null,
+      yearOptions: Array.from(
+        { length: 7 }, // Number of years to include: previous 3 years + current year + next 3 years
+        (_, i) => new Date().getFullYear() - 3 + i
+      ),
+      snackbar: {
+        show: false,
+        message: "",
+        color: "",
+      },
+    };
+  },
+  mounted() {
+    this.fetchMappingLicenseData();
+    this.fetchPassportAdvantageData();
+    this.fetchCalculationResultsData();
+  },
+  created() {
+    // Initialize selectedYear and selectedMonth with the current year and month
+    const currentDate = new Date();
+    this.selectedYearCurr = currentDate.getFullYear();
+    this.selectedMonthCurr = currentDate.getMonth() ; // Adding 1 to match with human-readable months (January is 1)
+    this.selectedYearPrev = currentDate.getFullYear();
+    this.selectedMonthPrev = currentDate.getMonth();
+  },
+  watch: {
+    selectedMonthCurr(newMonth, oldMonth) {
+      if (newMonth !== oldMonth && this.selectedYearCurr) {
+        this.matchDataCurr();
+      }
+    },
+    selectedYearCurr(newYear, oldYear) {
+      if (newYear !== oldYear && this.selectedMonthCurr) {
+        this.matchDataCurr();
+      }
+    },
+    selectedMonthPrev(newMonth, oldMonth) {
+      if (newMonth !== oldMonth && this.selectedYearPrev) {
+        this.matchDataPrev();
+      }
+    },
+    selectedYearPrev(newYear, oldYear) {
+      if (newYear !== oldYear && this.selectedMonthPrev) {
+        this.matchDataPrev();
+      }
+    },
+  },
+  methods: {
+    fetchMappingLicenseData() {
+      const tableName = "mappinglicense";
+      this.isLoading = true;
+      axios
+        .get(`${process.env.SERVER_NAME}/api/table-data/${tableName}`)
+        .then((response) => {
+          this.mappingLicenseData = response.data.sort();
+          this.matchDataCurr();
+          this.matchDataPrev();
+        })
+        .catch((error) => {
+          this.showSnackbar(
+            `Error fetching table data for ${tableName}: ${error.message}`,
+            "error"
+          );
+        })
+        .finally(() => {
+          this.isLoading = false;
+        });
+    },
+    fetchCalculationResultsData() {
+      const tableName = "calculation_results";
+      this.isLoading = true;
+      axios
+        .get(`${process.env.SERVER_NAME}/api/table-data/${tableName}`)
+        .then((response) => {
+          this.calculationResultsData = response.data.sort();
+          this.matchDataCurr();
+          this.matchDataPrev();
+        })
+        .catch((error) => {
+          this.showSnackbar(
+            `Error fetching table data for ${tableName}: ${error.message}`,
+            "error"
+          );
+        })
+        .finally(() => {
+          this.isLoading = false;
+        });
+    },
+    async fetchPassportAdvantageData() {
+      try {
+        // Fetch the list of table names
+        const response = await axios.get(
+          `${process.env.SERVER_NAME}/api/table-names`
+        );
+        const tableList = response.data;
+
+        // Filter passport tables from the list
+        const passportTables = tableList.filter((tableName) =>
+          /^passport_\d+_\d+$/i.test(tableName)
+        );
+
+        if (passportTables.length === 0) {
+          throw new Error("No valid passport tables found.");
+        }
+
+        // Sort the passportTables based on the month and year in the table name
+        passportTables.sort((a, b) => {
+          const [, monthA, yearA] = a.match(/passport_(\d+)_(\d+)/i);
+          const [, monthB, yearB] = b.match(/passport_(\d+)_(\d+)/i);
+          const dateA = new Date(Number(yearA), Number(monthA) - 1);
+          const dateB = new Date(Number(yearB), Number(monthB) - 1);
+          return dateA - dateB;
+        });
+
+        // Get the newest table (last element in the sorted array)
+        const newestTable = passportTables[passportTables.length - 1];
+
+        // Fetch data from the newest table
+        const responseNewest = await axios.get(
+          `${process.env.SERVER_NAME}/api/table-data/${newestTable}`
+        );
+        this.passportAdvantageData = responseNewest.data.sort();
+        // console.log(newestTable)
+        this.matchDataCurr();
+        this.matchDataPrev();
+      } catch (error) {
+        this.showSnackbar(
+          `Error fetching Passport Advantage data: ${error.message}`,
+          "error"
+        );
+      } finally {
+        this.isLoading = false;
+      }
+    },
+    matchDataCurr() {
+      this.matchedDataCurr = [];
+
+      const pvuSums = new Map();
+      const lparSums = new Map();
+      const nonLparSums = new Map();
+      const licenseVpcSums = new Map();
+
+      // Iterate through each item in calculationResultsData
+      this.calculationResultsData.forEach((resultItem) => {
+        // Extract the table name from the resultItem
+        const tableName = resultItem["tablename"];
+
+        // Extract month and year from the table name
+        const [, month, year] = tableName.match(/(\d+)_(\d+)/i);
+
+        // Check if the month and year match the selected month and year
+        if (
+          parseInt(month) === this.selectedMonthCurr &&
+          parseInt(year) === this.selectedYearCurr
+        ) {
+          // The rest of your code goes here...
+          const componentName = resultItem["component_name"];
+          const pvuMin = parseInt(resultItem["pvu_min"]) || 0; // Parse pvu_min to ensure it's a number
+          const lparLicense = parseInt(resultItem["lpar_license"]) || 0; // Parse lpar_license to ensure it's a number
+          const nonLparLicense = parseInt(resultItem["non_lpar_license"]) || 0; // Parse non_lpar_license to ensure it's a number
+          const licenseVpc = parseInt(resultItem["license_vpc"]) || 0; // Parse license_vpc to ensure it's a number
+
+          // Update pvu_min sum
+          if (pvuSums.has(componentName)) {
+            pvuSums.set(componentName, pvuSums.get(componentName) + pvuMin);
+          } else {
+            pvuSums.set(componentName, pvuMin);
+          }
+
+          // Update lpar_license sum
+          if (lparSums.has(componentName)) {
+            lparSums.set(
+              componentName,
+              lparSums.get(componentName) + lparLicense
+            );
+          } else {
+            lparSums.set(componentName, lparLicense);
+          }
+
+          // Update non_lpar_license sum
+          if (nonLparSums.has(componentName)) {
+            nonLparSums.set(
+              componentName,
+              nonLparSums.get(componentName) + nonLparLicense
+            );
+          } else {
+            nonLparSums.set(componentName, nonLparLicense);
+          }
+
+          // Update license_vpc sum
+          if (licenseVpcSums.has(componentName)) {
+            licenseVpcSums.set(
+              componentName,
+              licenseVpcSums.get(componentName) + licenseVpc
+            );
+          } else {
+            licenseVpcSums.set(componentName, licenseVpc);
+          }
+        }
+      });
+
+      const processedComponentNames = new Set();
+      this.mappingLicenseData.forEach((mappingItem) => {
+        // Iterate through each item in calculationResultsData
+        const foundProductionData = this.calculationResultsData.find(
+          (resultItem) =>
+            resultItem.tablename.includes("production") &&
+            resultItem.component_name === mappingItem.product_name
+        );
+
+        const foundDevelopData = this.calculationResultsData.find(
+          (resultItem) =>
+            resultItem.tablename.includes("develop") &&
+            resultItem.component_name === mappingItem.product_name
+        );
+
+        this.calculationResultsData.forEach((resultItem) => {
+          // Extract the table name from the resultItem
+          const tableName = resultItem["tablename"];
+
+          // Check if the tablename includes 'production' or 'develop'
+          if (
+            tableName.includes("production") ||
+            tableName.includes("develop")
+          ) {
+            // Extract month and year from the table name
+            const [, month, year] = tableName.match(/(\d+)_(\d+)/i);
+
+            // Check if the month and year match the selected month and year
+            if (
+              parseInt(month) === this.selectedMonthCurr &&
+              parseInt(year) === this.selectedYearCurr
+            ) {
+              // Find matching item in passportAdvantageData based on license_name
+              const matchingPassportItem = this.passportAdvantageData.find(
+                (passportItem) => {
+                  return (
+                    passportItem["Current Product"] === mappingItem.license_name
+                  );
+                }
+              );
+
+              // Find matching item in calculationResultsData based on component_name
+              if (
+                resultItem["component_name"] === mappingItem.product_name ||
+                mappingItem.product_name
+              ) {
+                // Check if the component name has already been processed
+                if (!processedComponentNames.has(mappingItem.product_name)) {
+                  // Add the component name to the set of processed names
+                  processedComponentNames.add(mappingItem.product_name);
+
+                  let pvuMinProduction = null;
+                  let pvuMinDevelop = null;
+                  let licenseVpcProduction = null;
+                  let licenseVpcDevelop = null;
+                  let lparLicenseProduction = null;
+                  let lparLicenseDevelop = null;
+                  let nonLparLicenseProduction = null;
+                  let nonLparLicenseDevelop = null;
+
+                  // If there is production data, assign it to corresponding variables
+                  if (foundProductionData) {
+                    pvuMinProduction =
+                      parseInt(foundProductionData.pvu_min) || null;
+                    licenseVpcProduction =
+                      parseInt(foundProductionData.license_vpc) || null;
+                    lparLicenseProduction =
+                      parseInt(foundProductionData.lpar_license) || null;
+                    nonLparLicenseProduction =
+                      parseInt(foundProductionData.non_lpar_license) || null;
+                  }
+
+                  // If there is develop data, assign it to corresponding variables
+                  if (foundDevelopData) {
+                    pvuMinDevelop = parseInt(foundDevelopData.pvu_min) || null;
+                    licenseVpcDevelop =
+                      parseInt(foundDevelopData.license_vpc) || null;
+                    lparLicenseDevelop =
+                      parseInt(foundDevelopData.lpar_license) || null;
+                    nonLparLicenseDevelop =
+                      parseInt(foundDevelopData.non_lpar_license) || null;
+                  }
+
+                  if (matchingPassportItem) {
+                    const componentName = mappingItem.product_name;
+                    const pvuMinSum = pvuSums.get(componentName) || 0;
+                    const lparSum = lparSums.get(componentName) || 0;
+                    const nonLparSum = nonLparSums.get(componentName) || 0;
+                    const licenseVpcSum =
+                      licenseVpcSums.get(componentName) || 0;
+                    const totalLicense = lparSum + nonLparSum;
+
+                    this.matchedDataCurr.push({
+                      product_name: mappingItem.product_name,
+                      license_name: mappingItem.license_name,
+                      "Current Product": matchingPassportItem
+                        ? matchingPassportItem["Current Product"]
+                        : null,
+                      "Software License or Appliance Quantity":
+                        matchingPassportItem
+                          ? matchingPassportItem[
+                              "Software License or Appliance Quantity"
+                            ]
+                          : null,
+                      "Active Subscription & Support Quantity":
+                        matchingPassportItem
+                          ? matchingPassportItem[
+                              "Active Subscription & Support Quantity"
+                            ]
+                          : null,
+                      data_collection: parseInt(mappingItem.data_collection),
+                      pvu_min_production: pvuMinProduction,
+                      pvu_min_develop: pvuMinDevelop,
+                      license_vpc_production: licenseVpcProduction,
+                      license_vpc_develop: licenseVpcDevelop,
+                      lpar_license_production: lparLicenseProduction,
+                      lpar_license_develop: lparLicenseDevelop,
+                      non_lpar_license_production: nonLparLicenseProduction,
+                      non_lpar_license_develop: nonLparLicenseDevelop,
+                      pvu_min: pvuMinSum,
+                      license_vpc: licenseVpcSum,
+                      lpar_license: lparSum,
+                      non_lpar_license: nonLparSum,
+                      Total_License: totalLicense, // Adding total license value
+                      calculation_date: resultItem["calculation_date"],
+                    });
+                  }
+                }
+              }
+            }
+          }
+        });
+      });
+      this.matchedDataCurr.sort((a, b) => {
+        return a.product_name.localeCompare(b.product_name);
+      });
+    },
+    async saveData() {
+      // Call the matchDataCurr function to update the matched data
+      await this.matchDataCurr();
+
+      // Iterate through matched data and call saveDataToPostgreSQL function
+      this.matchedDataCurr.forEach((data) => {
+        const { product_name, Total_License, pvu_min, license_vpc } = data;
+
+        // Check if any of the values is equal to 0
+        if (Total_License !== 0 || pvu_min !== 0 || license_vpc !== 0) {
+          this.saveDataToPostgreSQL(
+            product_name,
+            Total_License,
+            pvu_min,
+            license_vpc
+          );
+        } else {
+          console.log(
+            `Data for product ${product_name} not saved because it contains zero values.`
+          );
+          // Optionally, you can show a message to the user indicating that the data was not saved
+        }
+      });
+    },
+    async saveDataToPostgreSQL(
+      productName,
+      totalLicense,
+      pvuMinSum,
+      licenseVpcSum
+    ) {
+      // Check if any of the values is equal to 0
+      if (totalLicense !== 0 || pvuMinSum !== 0 || licenseVpcSum !== 0) {
+        try {
+          const response = await axios.post(
+            `${process.env.SERVER_NAME}/api/update-data-collection`,
+            {
+              productName: productName,
+              newDataCollection: {
+                pvuMinSum: pvuMinSum,
+                licenseVpcSum: licenseVpcSum,
+                totalLicense: totalLicense,
+              },
+            }
+          );
+          console.log(response.data); // Log the response from the server
+          // Show snackbar with success message
+          this.showSnackbar("Data updated successfully", "success");
+        } catch (error) {
+          console.error("Error saving data:", error.response.data.error);
+          // Show snackbar with error message
+          this.showSnackbar("Error saving data", "error");
+        }
+      } else {
+        console.log("Data not saved because it contains zero values.");
+        // Optionally, you can show a message to the user indicating that the data was not saved
+      }
+    },
+    matchDataPrev() {
+      this.matchedDataPrev = [];
+
+      const pvuSums = new Map();
+      const lparSums = new Map();
+      const nonLparSums = new Map();
+      const licenseVpcSums = new Map();
+
+      // Iterate through each item in calculationResultsData
+      this.calculationResultsData.forEach((resultItem) => {
+        // Extract the table name from the resultItem
+        const tableName = resultItem["tablename"];
+
+        // Extract month and year from the table name
+        const [, month, year] = tableName.match(/(\d+)_(\d+)/i);
+
+        // Check if the month and year match the selected month and year
+        if (
+          parseInt(month) === this.selectedMonthPrev &&
+          parseInt(year) === this.selectedYearPrev
+        ) {
+          // The rest of your code goes here...
+          const componentName = resultItem["component_name"];
+          const pvuMin = parseInt(resultItem["pvu_min"]) || 0; // Parse pvu_min to ensure it's a number
+          const lparLicense = parseInt(resultItem["lpar_license"]) || 0; // Parse lpar_license to ensure it's a number
+          const nonLparLicense = parseInt(resultItem["non_lpar_license"]) || 0; // Parse non_lpar_license to ensure it's a number
+          const licenseVpc = parseInt(resultItem["license_vpc"]) || 0; // Parse license_vpc to ensure it's a number
+
+          // Update pvu_min sum
+          if (pvuSums.has(componentName)) {
+            pvuSums.set(componentName, pvuSums.get(componentName) + pvuMin);
+          } else {
+            pvuSums.set(componentName, pvuMin);
+          }
+
+          // Update lpar_license sum
+          if (lparSums.has(componentName)) {
+            lparSums.set(
+              componentName,
+              lparSums.get(componentName) + lparLicense
+            );
+          } else {
+            lparSums.set(componentName, lparLicense);
+          }
+
+          // Update non_lpar_license sum
+          if (nonLparSums.has(componentName)) {
+            nonLparSums.set(
+              componentName,
+              nonLparSums.get(componentName) + nonLparLicense
+            );
+          } else {
+            nonLparSums.set(componentName, nonLparLicense);
+          }
+
+          // Update license_vpc sum
+          if (licenseVpcSums.has(componentName)) {
+            licenseVpcSums.set(
+              componentName,
+              licenseVpcSums.get(componentName) + licenseVpc
+            );
+          } else {
+            licenseVpcSums.set(componentName, licenseVpc);
+          }
+        }
+      });
+
+      const processedComponentNames = new Set();
+      this.mappingLicenseData.forEach((mappingItem) => {
+        // Iterate through each item in calculationResultsData
+        const foundProductionData = this.calculationResultsData.find(
+          (resultItem) =>
+            resultItem.tablename.includes("production") &&
+            resultItem.component_name === mappingItem.product_name
+        );
+
+        const foundDevelopData = this.calculationResultsData.find(
+          (resultItem) =>
+            resultItem.tablename.includes("develop") &&
+            resultItem.component_name === mappingItem.product_name
+        );
+
+        this.calculationResultsData.forEach((resultItem) => {
+          // Extract the table name from the resultItem
+          const tableName = resultItem["tablename"];
+
+          // Check if the tablename includes 'production' or 'develop'
+          if (
+            tableName.includes("production") ||
+            tableName.includes("develop")
+          ) {
+            // Extract month and year from the table name
+            const [, month, year] = tableName.match(/(\d+)_(\d+)/i);
+
+            // Check if the month and year match the selected month and year
+            if (
+              parseInt(month) === this.selectedMonthPrev &&
+              parseInt(year) === this.selectedYearPrev
+            ) {
+              // Find matching item in passportAdvantageData based on license_name
+              const matchingPassportItem = this.passportAdvantageData.find(
+                (passportItem) => {
+                  return (
+                    passportItem["Current Product"] === mappingItem.license_name
+                  );
+                }
+              );
+
+              // Find matching item in calculationResultsData based on component_name
+              if (
+                resultItem["component_name"] === mappingItem.product_name ||
+                mappingItem.product_name
+              ) {
+                // Check if the component name has already been processed
+                if (!processedComponentNames.has(mappingItem.product_name)) {
+                  // Add the component name to the set of processed names
+                  processedComponentNames.add(mappingItem.product_name);
+
+                  let pvuMinProduction = null;
+                  let pvuMinDevelop = null;
+                  let licenseVpcProduction = null;
+                  let licenseVpcDevelop = null;
+                  let lparLicenseProduction = null;
+                  let lparLicenseDevelop = null;
+                  let nonLparLicenseProduction = null;
+                  let nonLparLicenseDevelop = null;
+
+                  // If there is production data, assign it to corresponding variables
+                  if (foundProductionData) {
+                    pvuMinProduction =
+                      parseInt(foundProductionData.pvu_min) || null;
+                    licenseVpcProduction =
+                      parseInt(foundProductionData.license_vpc) || null;
+                    lparLicenseProduction =
+                      parseInt(foundProductionData.lpar_license) || null;
+                    nonLparLicenseProduction =
+                      parseInt(foundProductionData.non_lpar_license) || null;
+                  }
+
+                  // If there is develop data, assign it to corresponding variables
+                  if (foundDevelopData) {
+                    pvuMinDevelop = parseInt(foundDevelopData.pvu_min) || null;
+                    licenseVpcDevelop =
+                      parseInt(foundDevelopData.license_vpc) || null;
+                    lparLicenseDevelop =
+                      parseInt(foundDevelopData.lpar_license) || null;
+                    nonLparLicenseDevelop =
+                      parseInt(foundDevelopData.non_lpar_license) || null;
+                  }
+
+                  if (matchingPassportItem) {
+                    const componentName = mappingItem.product_name;
+                    const pvuMinSum = pvuSums.get(componentName) || 0;
+                    const lparSum = lparSums.get(componentName) || 0;
+                    const nonLparSum = nonLparSums.get(componentName) || 0;
+                    const licenseVpcSum =
+                      licenseVpcSums.get(componentName) || 0;
+                    const totalLicense = lparSum + nonLparSum;
+                    this.matchedDataPrev.push({
+                      product_name: mappingItem.product_name,
+                      license_name: mappingItem.license_name,
+                      "Current Product": matchingPassportItem
+                        ? matchingPassportItem["Current Product"]
+                        : null,
+                      "Software License or Appliance Quantity":
+                        matchingPassportItem
+                          ? matchingPassportItem[
+                              "Software License or Appliance Quantity"
+                            ]
+                          : null,
+                      "Active Subscription & Support Quantity":
+                        matchingPassportItem
+                          ? matchingPassportItem[
+                              "Active Subscription & Support Quantity"
+                            ]
+                          : null,
+                      data_collection: parseInt(mappingItem.data_collection),
+                      pvu_min_production: pvuMinProduction,
+                      pvu_min_develop: pvuMinDevelop,
+                      license_vpc_production: licenseVpcProduction,
+                      license_vpc_develop: licenseVpcDevelop,
+                      lpar_license_production: lparLicenseProduction,
+                      lpar_license_develop: lparLicenseDevelop,
+                      non_lpar_license_production: nonLparLicenseProduction,
+                      non_lpar_license_develop: nonLparLicenseDevelop,
+                      pvu_min: pvuMinSum,
+                      license_vpc: licenseVpcSum,
+                      lpar_license: lparSum,
+                      non_lpar_license: nonLparSum,
+                      Total_License: totalLicense, // Adding total license value
+                      calculation_date: resultItem["calculation_date"],
+                    });
+                  }
+                }
+              }
+            }
+          }
+        });
+      });
+      this.matchedDataPrev.sort((a, b) => {
+        return a.product_name.localeCompare(b.product_name);
+      });
+    },
+
+    getActiveSubscription(item) {
+      let activeSubscription = item["Active Subscription & Support Quantity"];
+
+      // Remove commas from the string
+      activeSubscription = activeSubscription.replace(/,/g, "");
+
+      // Parse the string to integer
+      activeSubscription = parseInt(activeSubscription) || 0;
+
+      return activeSubscription;
+    },
+    showSnackbar(message, color) {
+      this.snackbar.message = message;
+      this.snackbar.color = color;
+      this.snackbar.show = true;
+    },
+  },
+};
+</script>
+
+<style scoped>
+/* Add your custom styles here */
+</style>
