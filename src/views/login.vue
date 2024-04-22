@@ -128,7 +128,7 @@
 </template>
 
 <script>
-import axios from "axios";
+import axios from "../axiosInstance";
 import { mapActions } from "vuex"; // Import mapActions to use Vuex actions
 
 export default {
@@ -164,7 +164,7 @@ export default {
 
     async login() {
       try {
-        await axios.post(`${process.env.SERVER_NAME}/login`, {
+        await axios.post(`/login`, {
           username: this.username,
         });
         this.updateUsername(this.username); // Dispatch action to update username
@@ -176,7 +176,7 @@ export default {
     },
     async signup() {
       try {
-        await axios.post(`${process.env.SERVER_NAME}/signup`, {
+        await axios.post(`/signup`, {
           username: this.username,
         });
         this.updateUsername(this.username); // Dispatch action to update username
@@ -188,9 +188,7 @@ export default {
     },
     async fetchUsernames() {
       try {
-        const response = await axios.get(
-          `${process.env.SERVER_NAME}/usernames`
-        );
+        const response = await axios.get(`/usernames`);
         this.usernames = response.data;
       } catch (error) {
         console.error("Error fetching usernames:", error);
@@ -199,9 +197,7 @@ export default {
     },
     async deleteUsername(username) {
       try {
-        const response = await axios.delete(
-          `${process.env.SERVER_NAME}/api/usernames/${username}`
-        );
+        const response = await axios.delete(`/api/usernames/${username}`);
         await this.fetchUsernames();
         this.popupVisible = false;
         this.showSnackbar(response.data.message, "success");

@@ -420,6 +420,7 @@ export default {
         const dataToStore = this.calculationResults.map((result) => ({
           tablename: this.selectedTable,
           componentName: result.componentName.trim(),
+          productmetric: result.productmetric.trim(),
           pvuMin: result.pvuMin,
           pvuMax: result.pvuMax,
           LicenseVPC: result.LicenseVPC,

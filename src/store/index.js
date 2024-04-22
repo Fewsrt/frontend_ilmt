@@ -1,28 +1,34 @@
-// store/index.js
-
 import { createStore } from "vuex";
 
 export default createStore({
   state: {
-    username: localStorage.getItem("username") || "", // Initialize with the value from local storage
+    username: localStorage.getItem("username") || "",
   },
   mutations: {
     setUsername(state, username) {
-      state.username = username; // Mutation to set the username
-      localStorage.setItem("username", username); // Update local storage
+      state.username = username;
+      localStorage.setItem("username", username);
+    },
+    clearUsername(state) {
+      state.username = "";
+      localStorage.removeItem("username");
     },
   },
   actions: {
-    // Action to update the username
     updateUsername({ commit }, username) {
-      commit("setUsername", username); // Commit the mutation to set the username
+      commit("setUsername", username);
+    },
+    logout({ commit }) {
+      commit("clearUsername"); // Call the clearUsername mutation when logging out
+    },
+    clearUsername({ commit }) {
+      // Define the clearUsername action
+      commit("clearUsername");
     },
   },
   getters: {
-    // Getter to access the username
     getUsername(state) {
       return state.username;
     },
   },
-  modules: {},
 });

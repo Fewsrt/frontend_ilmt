@@ -5,7 +5,7 @@
         <v-app-bar-nav-icon @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
       </template>
       <v-toolbar-title
-        >IBM License Metric Tool Customer : {{ this.username }}</v-toolbar-title
+        >IBM License Metric For Customer: {{ this.username }}</v-toolbar-title
       >
       <v-spacer></v-spacer>
       <template v-if="showNavigation">
@@ -47,8 +47,8 @@
 </template>
 
 <script>
-import axios from "axios";
-import { mapState } from "vuex";
+import axios from "./axiosInstance";
+import { mapState, mapActions } from "vuex";
 
 export default {
   name: "App",
@@ -72,12 +72,14 @@ export default {
     },
     async logout() {
       try {
-        await axios.post(`${process.env.SERVER_NAME}/logout`);
+        await axios.post(`/logout`);
         this.$router.push("/");
+        this.clearUsername(); // Call the clearUsername action from Vuex store
       } catch (error) {
         console.error("Error logging out:", error);
       }
     },
+    ...mapActions(["clearUsername"]), // Map the clearUsername action
   },
   created() {
     this.updateNavigationVisibility();

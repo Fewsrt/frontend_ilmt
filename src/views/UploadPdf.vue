@@ -127,7 +127,12 @@
       >
       <v-btn @click="uploadFile" color="primary">Upload</v-btn>
     </v-col>
-    <v-data-table :headers="headers" :items="pdfFiles" item-key="id">
+    <v-data-table
+      :headers="headers"
+      :items="pdfFiles"
+      item-key="id"
+      :items-per-page="-1"
+    >
       <template v-slot:[`item.actions`]="{ item, index }">
         <v-icon
           color="error"

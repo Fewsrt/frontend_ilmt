@@ -7,7 +7,7 @@
       <v-col cols="12">
         <v-select
           v-model="selectedTable"
-          :items="tableNames"
+          :items="filteredTableNames"
           label="Select Table"
           outlined
           dense
@@ -123,6 +123,15 @@ export default {
         });
         return filteredRow;
       });
+    },
+    filteredTableNames() {
+      // Filter tableNames based on conditions
+      return this.tableNames
+        .filter(
+          (tableName) =>
+            tableName.includes("develop") || tableName.includes("production") || tableName.includes("passport")
+        )
+        .sort();
     },
     ...mapState(["username"]),
   },
