@@ -6,11 +6,11 @@
 ## Run with Docker
 ### Build docker image
 ```
-docker build -f Dockerfile -t ilmt-app:`tag_version` .
+docker build -f Dockerfile -t ilmt-app:[TAG_VERSION] .
 ```
 ### Run docker image
 ```
-docker run -d -p 8080:80 ilmt-app:`tag_version`
+docker run -d -p 8080:80 ilmt-app:[TAG_VERSION]
 ```
 After you run already you can access your web from `http://localhost:8080`
 
