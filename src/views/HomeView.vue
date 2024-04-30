@@ -161,7 +161,7 @@ export default {
     // Initialize selectedYear and selectedMonth with the current year and month
     const currentDate = new Date();
     this.selectedYearCurr = currentDate.getFullYear();
-    this.selectedMonthCurr = currentDate.getMonth(); // Adding 1 to match with human-readable months (January is 1)
+    this.selectedMonthCurr = currentDate.getMonth() + 1; // Adding 1 to match with human-readable months (January is 1)
   },
   watch: {
     selectedMonthCurr(newMonth, oldMonth) {
