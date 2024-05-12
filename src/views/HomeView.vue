@@ -84,7 +84,6 @@
 import axios from "axios";
 import * as XLSX from "xlsx";
 import { mapState } from "vuex";
-
 export default {
   data() {
     return {
@@ -92,6 +91,7 @@ export default {
       mappingLicenseData: [],
       passportAdvantageData: [],
       calculationResultsData: [],
+      pdfsData: [],
       isLoading: false,
       selectedMonthCurr: null, // New property for selected Month
       monthOptions: Array.from({ length: 12 }, (_, i) => i + 1), // Array to hold Months from 1 to 12
@@ -111,9 +111,14 @@ export default {
         { title: "Product Name", text: "Product Name", value: "product_name" },
         { title: "License Name", text: "License Name", value: "license_name" },
         {
-          title: "Software License",
-          text: "Software License or Appliance Quantity",
-          value: "license_quantity",
+          title: "Order Reference Number",
+          text: "Order Reference Number",
+          value: "order_reference_number",
+        },
+        {
+          title: "Purchase License",
+          text: "Purchase License",
+          value: "purchase_license",
         },
         {
           title: "Active Subscription",
@@ -140,11 +145,6 @@ export default {
           text: "Status",
           key: "status",
         },
-        {
-          title: "Calculation Date",
-          text: "Calculation Date",
-          value: "calculation_date",
-        },
       ],
       dataSaved: false,
     };
@@ -153,6 +153,7 @@ export default {
     this.fetchMappingLicenseData();
     this.fetchPassportAdvantageData();
     this.fetchCalculationResultsData();
+    this.fetchpdfsData();
   },
   computed: {
     ...mapState(["username"]),
@@ -161,17 +162,19 @@ export default {
     // Initialize selectedYear and selectedMonth with the current year and month
     const currentDate = new Date();
     this.selectedYearCurr = currentDate.getFullYear();
-    this.selectedMonthCurr = currentDate.getMonth() + 1; // Adding 1 to match with human-readable months (January is 1)
+    this.selectedMonthCurr = currentDate.getMonth(); // Adding 1 to match with human-readable months (January is 1)
   },
   watch: {
     selectedMonthCurr(newMonth, oldMonth) {
       if (newMonth !== oldMonth && this.selectedYearCurr) {
         this.matchDataCurr();
+        this.dataSaved = false;
       }
     },
     selectedYearCurr(newYear, oldYear) {
       if (newYear !== oldYear && this.selectedMonthCurr) {
         this.matchDataCurr();
+        this.dataSaved = false;
       }
     },
   },
@@ -186,7 +189,7 @@ export default {
       }, 2000);
     },
     getColor(status) {
-      return status === "covered" ? "green" : "red";
+      return status === "Covered" ? "green" : "red";
     },
     async fetchMappingLicenseData() {
       const tableName = "mappinglicense";
@@ -224,6 +227,29 @@ export default {
           }
         );
         this.calculationResultsData = response.data.sort();
+        this.matchDataCurr();
+      } catch (error) {
+        this.showSnackbar(
+          `Error fetching table data for ${tableName}: ${error.message}`,
+          "error"
+        );
+      } finally {
+        this.isLoading = false;
+      }
+    },
+    async fetchpdfsData() {
+      const tableName = "pdflink";
+      this.isLoading = true;
+      try {
+        const response = await axios.get(
+          `${process.env.SERVER_NAME}/api/table-data/${tableName}`,
+          {
+            params: {
+              username: this.username, // Include the username as a query parameter
+            },
+          }
+        );
+        this.pdfsData = response.data.sort();
         this.matchDataCurr();
       } catch (error) {
         this.showSnackbar(
@@ -361,14 +387,16 @@ export default {
         // Iterate through each item in calculationResultsData
         const foundProductionData = this.calculationResultsData.find(
           (resultItem) =>
-            resultItem.tablename.includes("production") &&
-            resultItem.component_name === mappingItem.product_name
+            resultItem.tablename.includes(
+              `production_${this.selectedMonthCurr}_${this.selectedYearCurr}`
+            ) && resultItem.component_name === mappingItem.product_name
         );
 
         const foundDevelopData = this.calculationResultsData.find(
           (resultItem) =>
-            resultItem.tablename.includes("develop") &&
-            resultItem.component_name === mappingItem.product_name
+            resultItem.tablename.includes(
+              `develop_${this.selectedMonthCurr}_${this.selectedYearCurr}`
+            ) && resultItem.component_name === mappingItem.product_name
         );
 
         this.calculationResultsData.forEach((resultItem) => {
@@ -396,6 +424,12 @@ export default {
                   );
                 }
               );
+
+              const matchingPdfsItem = this.pdfsData.find((pdfsItem) => {
+                return (
+                  pdfsItem["selected_license"] === mappingItem.license_name
+                );
+              });
 
               // Find matching item in calculationResultsData based on component_name
               if (
@@ -478,8 +512,8 @@ export default {
 
                     const status =
                       activeSubscription >= mappingItem.data_collection
-                        ? "covered"
-                        : "not covered";
+                        ? "Covered"
+                        : "Over";
 
                     // Add new entry
                     this.mappedTableData.push({
@@ -489,6 +523,12 @@ export default {
                         ? matchingPassportItem[
                             "Software License or Appliance Quantity"
                           ]
+                        : null,
+                      order_reference_number: matchingPdfsItem
+                        ? matchingPdfsItem["ibm_order_ref_number"]
+                        : null,
+                      purchase_license: matchingPdfsItem
+                        ? matchingPdfsItem["quantity"]
                         : null,
                       active_subscription_quantity: matchingPassportItem
                         ? matchingPassportItem[
@@ -540,10 +580,7 @@ export default {
 
     async saveData() {
       this.dataSaved = false;
-      // Call the matchDataCurr function to update the matched data
-      await this.matchDataCurr();
       try {
-        await this.onClick();
         await new Promise((resolve) => setTimeout(resolve, 2000));
 
         // Iterate through matched data and call saveDataToPostgreSQL function

@@ -177,6 +177,7 @@ export default {
           },
         })
         .then((response) => {
+          response.data.sort((a, b) => a.id - b.id);
           this.tableData = response.data;
           this.tableHeaders = Object.keys(response.data[0]).map((key) => ({
             title: key,

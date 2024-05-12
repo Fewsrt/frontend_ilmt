@@ -1,10 +1,13 @@
 <template>
   <v-container>
-    <v-img
-      class="mx-auto my-6"
-      max-width="228"
-      src="https://firebasestorage.googleapis.com/v0/b/ssgreports-c1304.appspot.com/o/logo-with-text-screen-tr.png?alt=media&token=7aa946a6-edf8-4bff-a6bd-6957447387fc"
-    ></v-img>
+    <v-row justify="center">
+      <img
+        class="mx-auto my-6"
+        max-width="228"
+        alt="Vue logo"
+        src="../assets/dcs-logo.png"
+      />
+    </v-row>
     <v-row justify="center">
       <v-col cols="12" sm="8" md="6">
         <v-card
@@ -59,7 +62,12 @@
               v-model="username"
               :label="usernameLabel"
               variant="outlined"
-              :rules="[() => !!username || 'Customer Name is required']"
+              :rules="[
+                () => !!username || 'Customer Name is required',
+                (v) =>
+                  /^[a-z]+$/.test(v) ||
+                  'Username must contain only lowercase letters',
+              ]"
               required
             ></v-text-field>
 
@@ -71,7 +79,7 @@
                 size="large"
                 variant="tonal"
                 block
-                :disabled="!username"
+                :disabled="containsCapital(username)"
               >
                 Create
               </v-btn>
@@ -91,7 +99,6 @@
             </p>
           </v-card-text>
         </v-card>
-
         <v-dialog v-model="popupVisible" max-width="400">
           <v-card class="rounded-card">
             <v-card-title>Customers</v-card-title>
@@ -104,9 +111,7 @@
                 >
                   <v-list-item-title>{{ username }}</v-list-item-title>
                   <template v-slot:append>
-                    <v-icon @click="deleteUsername(username)"
-                      >mdi-delete</v-icon
-                    >
+                    <v-icon @click="confirmDelete(username)">mdi-delete</v-icon>
                   </template>
                 </v-list-item>
               </v-list>
@@ -139,6 +144,7 @@ export default {
       isLogin: true,
       usernames: [],
       popupVisible: false,
+      confirmationText: "",
       usernameLabel: "",
       snackbar: {
         show: false,
@@ -155,6 +161,10 @@ export default {
   methods: {
     // Use mapActions to map Vuex actions to component methods
     ...mapActions(["updateUsername"]), // Add updateUsername action
+    containsCapital(username) {
+        // Check if username is null or contains capital letters
+        return username === "" || /[A-Z]/.test(username);
+    },
     openPopup() {
       this.popupVisible = true;
     },
@@ -193,6 +203,14 @@ export default {
       } catch (error) {
         console.error("Error fetching usernames:", error);
         // Handle error
+      }
+    },
+    confirmDelete(username) {
+      const confirmation = prompt("Type 'Confirm' to delete this username:");
+      if (confirmation === "Confirm") {
+        this.deleteUsername(username);
+      } else {
+        // Do nothing or provide feedback to the user
       }
     },
     async deleteUsername(username) {

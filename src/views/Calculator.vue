@@ -78,24 +78,12 @@ import calresults from "../components/ReportData.vue";
             </v-card>
           </v-col>
         </v-row>
-        <!-- Show an alert if calculationResults is null -->
-        <v-row v-else-if="calculationResults === null">
-          <v-col cols="12">
-            <v-alert color="warning"
-              >Please calculate the results first.</v-alert
-            >
-          </v-col>
-        </v-row>
-        <!-- Show an alert if calculationResults is an empty array -->
-        <v-row v-else>
-          <v-col cols="12">
-            <v-alert color="info">No calculation results found.</v-alert>
-          </v-col>
-        </v-row>
         <v-row v-if="showSaveButton" class="text-center">
           <v-col cols="12">
             <v-btn @click="cancel" class="mr-2" color="warning">Cancel</v-btn>
-            <v-btn @click="saveData" color="primary">Save</v-btn>
+            <v-btn @click="saveData" :disabled="dataSaved" color="primary"
+              >Save</v-btn
+            >
           </v-col>
         </v-row>
       </v-col>
@@ -103,6 +91,13 @@ import calresults from "../components/ReportData.vue";
         <calresults></calresults>
       </v-col>
     </v-row>
+    <v-snackbar
+      v-model="snackbar.show"
+      :timeout="snackbar.timeout"
+      :color="snackbar.color"
+    >
+      {{ snackbar.message }}
+    </v-snackbar>
   </v-container>
 </template>
 
@@ -126,6 +121,12 @@ export default {
       componentNamesList: [], // List of component names for multi-select
       selectedComponentNames: [], // Selected component names from multi-select
       showSaveButton: false,
+      snackbar: {
+        show: false,
+        message: "",
+        color: "",
+      },
+      dataSaved: false,
     };
   },
   computed: {
@@ -209,7 +210,11 @@ export default {
 
           // Populate the componentNamesList for the multi-select
           this.componentNamesList = [
-            ...new Set(response.data.map((row) => row["Component Name"])),
+            // ...new Set(response.data.map((row) => row["Component Name"])),
+            "IBM Security Directory Server - Server",
+            "IBM DB2 Enterprise Server Edition PVU Option",
+            "IBM MQ Advanced",
+            "WebSphere Application Server Network Deployment",
           ].sort((a, b) => a.localeCompare(b));
         })
         .catch(() => {
@@ -233,6 +238,7 @@ export default {
     calculateData() {
       // Clear previous results
       this.calculationResults = [];
+      this.dataSaved = false;
 
       // Iterate over each selected component name and perform the calculation
       this.selectedComponentNames.forEach((componentName) => {
@@ -416,6 +422,7 @@ export default {
     },
 
     saveData() {
+      this.dataSaved = true;
       if (this.calculationResults && this.calculationResults.length > 0) {
         const dataToStore = this.calculationResults.map((result) => ({
           tablename: this.selectedTable,

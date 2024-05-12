@@ -30,8 +30,10 @@
   <v-container>
     <h2>License Mapping</h2>
     <v-data-table :headers="headers" :items="mappedTableData">
-      <template v-slot:[`item.actions`]="{ item }">
+      <template v-slot:[`item.edits`]="{ item }">
         <v-icon @click="editItem(item)">mdi-pencil</v-icon>
+      </template>
+      <template v-slot:[`item.actions`]="{ item }">
         <v-icon @click="deleteItem(item)">mdi-delete</v-icon>
       </template>
       <template v-slot:no-data>
@@ -50,6 +52,7 @@
               <v-text-field
                 v-model="editedItem.productName"
                 label="Product Name"
+                variant="outlined"
               ></v-text-field>
             </v-col>
           </v-row>
@@ -58,6 +61,7 @@
               <v-text-field
                 v-model="editedItem.licenseName"
                 label="License Name"
+                variant="outlined"
               ></v-text-field>
             </v-col>
           </v-row>
@@ -66,16 +70,15 @@
               <v-text-field
                 v-model="editedItem.datacollection"
                 label="Data Collection"
+                variant="outlined"
               ></v-text-field>
             </v-col>
           </v-row>
         </v-container>
       </v-card-text>
-      <v-card-actions>
-        <v-btn color="blue darken-1" variant="text" @click="close"
-          >Cancel</v-btn
-        >
-        <v-btn color="blue darken-1" variant="text" @click="save">Save</v-btn>
+      <v-card-actions class="d-flex justify-center">
+        <v-btn color="red" @click="close">Cancel</v-btn>
+        <v-btn color="primary" variant="text" @click="save">Save</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -138,7 +141,13 @@ export default {
           value: "data_collection",
         },
         {
-          title: "Actions",
+          title: "Edit",
+          text: "Edits",
+          value: "edits",
+          sortable: false,
+        },
+        {
+          title: "Delete",
           text: "Actions",
           value: "actions",
           sortable: false,
@@ -187,7 +196,8 @@ export default {
       this.mappedTableData = tableData.map((item) => {
         const matchingItem = passportAdvantageData.find(
           (passportItem) =>
-            passportItem["Current Product"] === item.license_name
+            passportItem["Current Product"] === item.license_name &&
+            passportItem["Program"] === "Passport Advantage"
         );
         if (matchingItem) {
           item.activeSubscriptionQuantity =
