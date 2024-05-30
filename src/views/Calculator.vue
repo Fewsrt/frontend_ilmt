@@ -421,8 +421,28 @@ export default {
       });
     },
 
-    saveData() {
+    async checkIfDataExists(data) {
+      try {
+        const response = await axios.get(
+          `${process.env.SERVER_NAME}/api/check-existing-data`,
+          {
+            params: {
+              username: this.username,
+              tablename: data.tablename,
+              componentName: data.componentName,
+            },
+          }
+        );
+        return response.data.exists; // Assuming the API returns { exists: true/false }
+      } catch (error) {
+        console.error("Error checking existing data:", error);
+        return false;
+      }
+    },
+
+    async saveData() {
       this.dataSaved = true;
+
       if (this.calculationResults && this.calculationResults.length > 0) {
         const dataToStore = this.calculationResults.map((result) => ({
           tablename: this.selectedTable,
@@ -435,22 +455,38 @@ export default {
           NonLPARLicense: result.NonLPARLicense,
           date: this.formatDate(new Date()),
         }));
-        axios
-          .post(`${process.env.SERVER_NAME}/api/store-results`, dataToStore, {
-            params: {
-              username: this.username,
-            },
-          })
-          .then(() => {
+
+        try {
+          const checks = await Promise.all(
+            dataToStore.map((data) => this.checkIfDataExists(data))
+          );
+          const dataNotExisting = dataToStore.filter(
+            (data, index) => !checks[index]
+          );
+
+          if (dataNotExisting.length > 0) {
+            await axios.post(
+              `${process.env.SERVER_NAME}/api/store-results`,
+              dataNotExisting,
+              {
+                params: {
+                  username: this.username,
+                },
+              }
+            );
             this.showSnackbar("Results stored successfully", "success");
-          })
-          .catch((error) => {
-            console.error("Error storing results:", error);
-          });
+          } else {
+            this.showSnackbar("All data already exists", "info");
+          }
+        } catch (error) {
+          console.error("Error storing results:", error);
+          this.showSnackbar("Error storing results", "error");
+        }
       } else {
         this.showSnackbar("No calculation results to save", "warning");
       }
     },
+
     cancel() {
       // Reset selectedTable and selectedComponentNames to null
       this.selectedTable = null;

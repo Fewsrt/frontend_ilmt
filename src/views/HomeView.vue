@@ -35,7 +35,7 @@
             Save Data
           </v-btn>
 
-          <v-btn v-if="dataSaved" color="primary" @click="exportToExcel">
+          <v-btn v-if="dataSaved" color="primary" @click="exportAllDataToExcel">
             Export to Excel
           </v-btn>
         </v-col>
@@ -63,8 +63,8 @@
               }}</v-chip>
             </template>
             <template v-slot:loading>
-              <v-skeleton-loader type="table-row@10"></v-skeleton-loader>
-            </template>
+              <v-skeleton-loader type="table-row@10"></v-skeleton-loader
+            ></template>
           </v-data-table>
         </v-col>
       </v-row>
@@ -81,9 +81,15 @@
 </template>
 
 <script>
-import axios from "axios";
-import * as XLSX from "xlsx";
 import { mapState } from "vuex";
+import { exportToExcel } from "@/utils/excelExport";
+import {
+  fetchTableData,
+  fetchTableNames,
+  saveDataToPostgreSQL,
+} from "@/services/api";
+import { dataProcessor } from "@/utils/dataProcessor";
+
 export default {
   data() {
     return {
@@ -91,7 +97,17 @@ export default {
       mappingLicenseData: [],
       passportAdvantageData: [],
       calculationResultsData: [],
+      productionData: [],
+      developData: [],
       pdfsData: [],
+      wasprdData: [],
+      wasdevData: [],
+      securitydirectoryprdData: [],
+      securitydirectorydevData: [],
+      mqprdData: [],
+      mqdevData: [],
+      db2prdData: [],
+      db2devData: [],
       isLoading: false,
       selectedMonthCurr: null, // New property for selected Month
       monthOptions: Array.from({ length: 12 }, (_, i) => i + 1), // Array to hold Months from 1 to 12
@@ -147,6 +163,7 @@ export default {
         },
       ],
       dataSaved: false,
+      expanded: [],
     };
   },
   mounted() {
@@ -195,15 +212,11 @@ export default {
       const tableName = "mappinglicense";
       this.isLoading = true;
       try {
-        const response = await axios.get(
-          `${process.env.SERVER_NAME}/api/table-data/${tableName}`,
-          {
-            params: {
-              username: this.username, // Include the username as a query parameter
-            },
-          }
+        this.mappingLicenseData = await fetchTableData(
+          "mappinglicense",
+          this.username
         );
-        this.mappingLicenseData = response.data.sort();
+        this.mappingLicenseData.sort();
         this.matchDataCurr();
       } catch (error) {
         this.showSnackbar(
@@ -218,15 +231,11 @@ export default {
       const tableName = "calculation_results";
       this.isLoading = true;
       try {
-        const response = await axios.get(
-          `${process.env.SERVER_NAME}/api/table-data/${tableName}`,
-          {
-            params: {
-              username: this.username, // Include the username as a query parameter
-            },
-          }
+        this.calculationResultsData = await fetchTableData(
+          "calculation_results",
+          this.username
         );
-        this.calculationResultsData = response.data.sort();
+        this.calculationResultsData.sort();
         this.matchDataCurr();
       } catch (error) {
         this.showSnackbar(
@@ -241,16 +250,10 @@ export default {
       const tableName = "pdflink";
       this.isLoading = true;
       try {
-        const response = await axios.get(
-          `${process.env.SERVER_NAME}/api/table-data/${tableName}`,
-          {
-            params: {
-              username: this.username, // Include the username as a query parameter
-            },
-          }
-        );
-        this.pdfsData = response.data.sort();
+        this.pdfsData = await fetchTableData("pdflink", this.username);
+        this.pdfsData.sort();
         this.matchDataCurr();
+        console.log(this.pdfsData);
       } catch (error) {
         this.showSnackbar(
           `Error fetching table data for ${tableName}: ${error.message}`,
@@ -261,19 +264,10 @@ export default {
       }
     },
     async fetchPassportAdvantageData() {
+      this.isLoading = true;
       try {
-        // Fetch the list of table names
-        const response = await axios.get(
-          `${process.env.SERVER_NAME}/api/table-names`,
-          {
-            params: {
-              username: this.username, // Include the username as a query parameter
-            },
-          }
-        );
-        const tableList = response.data;
+        const tableList = await fetchTableNames(this.username);
 
-        // Filter passport tables from the list
         const passportTables = tableList.filter((tableName) =>
           /^passport_\d+_\d+$/i.test(tableName)
         );
@@ -282,7 +276,6 @@ export default {
           throw new Error("No valid passport tables found.");
         }
 
-        // Sort the passportTables based on the month and year in the table name
         passportTables.sort((a, b) => {
           const [, monthA, yearA] = a.match(/passport_(\d+)_(\d+)/i);
           const [, monthB, yearB] = b.match(/passport_(\d+)_(\d+)/i);
@@ -291,23 +284,66 @@ export default {
           return dateA - dateB;
         });
 
-        // Get the newest table (last element in the sorted array)
         const newestTable = passportTables[passportTables.length - 1];
 
-        // Fetch data from the newest table
-        const responseNewest = await axios.get(
-          `${process.env.SERVER_NAME}/api/table-data/${newestTable}`,
-          {
-            params: {
-              username: this.username, // Include the username as a query parameter
-            },
-          }
+        this.passportAdvantageData = await fetchTableData(
+          newestTable,
+          this.username
         );
-        this.passportAdvantageData = responseNewest.data.sort();
+        this.passportAdvantageData.sort();
         this.matchDataCurr();
       } catch (error) {
+        this.showSnackbar(error.message, "error");
+      } finally {
+        this.isLoading = false;
+      }
+    },
+
+    async fetchProductionData() {
+      const tableName = `production_${this.selectedMonthCurr}_${this.selectedYearCurr}`;
+      this.isLoading = true;
+
+      try {
+        const rawData = await fetchTableData(tableName, this.username);
+        const wasprdrawData = rawData.filter(item => item["Component Name"] === "WebSphere Application Server Network Deployment");
+        const securitydirectoryprdrawData = rawData.filter(item => item["Component Name"] === "IBM Security Directory Server - Server");
+        const mqprdrawData = rawData.filter(item => item["Component Name"] === "IBM MQ Advanced");
+        const db2prdrawData = rawData.filter(item => item["Component Name"] === "IBM DB2 Enterprise Server Edition PVU Option");
+        this.productionData = dataProcessor(rawData);
+        this.wasprdData = dataProcessor(wasprdrawData);
+        this.securitydirectoryprdData = dataProcessor(securitydirectoryprdrawData);
+        this.mqprdData = dataProcessor(mqprdrawData);
+        this.db2prdData = dataProcessor(db2prdrawData);
+        this.matchDataCurr(); // Assuming you want to process the fetched data
+      } catch (error) {
         this.showSnackbar(
-          `Error fetching Passport Advantage data: ${error.message}`,
+          `Error fetching production data for ${tableName}: ${error.message}`,
+          "error"
+        );
+      } finally {
+        this.isLoading = false;
+      }
+    },
+
+    async fetchDevelopData() {
+      const tableName = `develop_${this.selectedMonthCurr}_${this.selectedYearCurr}`;
+      this.isLoading = true;
+
+      try {
+        const rawData = await fetchTableData(tableName, this.username);
+        const wasdevrawData = rawData.filter(item => item["Component Name"] === "WebSphere Application Server Network Deployment");
+        const securitydirectorydevrawData = rawData.filter(item => item["Component Name"] === "IBM Security Directory Server - Server");
+        const mqdevrawData = rawData.filter(item => item["Component Name"] === "IBM MQ Advanced");
+        const db2devrawData = rawData.filter(item => item["Component Name"] === "IBM DB2 Enterprise Server Edition PVU Option");
+        this.developData = dataProcessor(rawData);
+        this.wasdevData = dataProcessor(wasdevrawData);
+        this.securitydirectorydevData = dataProcessor(securitydirectorydevrawData);
+        this.mqdevData = dataProcessor(mqdevrawData);
+        this.db2devData = dataProcessor(db2devrawData);
+        this.matchDataCurr(); // Assuming you want to process the fetched data
+      } catch (error) {
+        this.showSnackbar(
+          `Error fetching develop data for ${tableName}: ${error.message}`,
           "error"
         );
       } finally {
@@ -583,118 +619,70 @@ export default {
       try {
         await new Promise((resolve) => setTimeout(resolve, 2000));
 
-        // Iterate through matched data and call saveDataToPostgreSQL function
-        this.mappedTableData.forEach((data) => {
+        for (const data of this.mappedTableData) {
           const { product_name, Total_License, pvu_min, license_vpc } = data;
 
-          // Check if any of the values is equal to 0
           if (Total_License !== 0 || pvu_min !== 0 || license_vpc !== 0) {
-            this.saveDataToPostgreSQL(
+            const response = await saveDataToPostgreSQL(
+              this.username,
               product_name,
               Total_License,
               pvu_min,
               license_vpc
+            );
+            this.showSnackbar(
+              response.message,
+              response.success ? "success" : "error"
             );
           } else {
             this.showSnackbar(
               "Data not saved because it contains zero values.",
               "error"
             );
-            // Optionally, you can show a message to the user indicating that the data was not saved
           }
-        });
+        }
 
         this.dataSaved = true;
       } catch (error) {
-        // Handle any errors
         console.error("Error occurred:", error);
-        // Ensure Save Data button remains visible in case of error
         this.dataSaved = false;
       }
     },
-
-    async saveDataToPostgreSQL(
-      productName,
-      totalLicense,
-      pvuMinSum,
-      licenseVpcSum
-    ) {
-      // Check if any of the values is equal to 0
-      if (totalLicense !== 0 || pvuMinSum !== 0 || licenseVpcSum !== 0) {
-        try {
-          await axios.post(
-            `${process.env.SERVER_NAME}/api/update-data-collection`,
-            {
-              productName: productName,
-              newDataCollection: {
-                pvuMinSum: pvuMinSum,
-                licenseVpcSum: licenseVpcSum,
-                totalLicense: totalLicense,
-              },
-            },
-            {
-              params: {
-                username: this.username, // Include the username as a query parameter
-              },
-            }
-          );
-          this.showSnackbar("Data updated successfully", "success");
-        } catch (error) {
-          this.showSnackbar("Error saving data", "error");
-        }
-      } else {
-        this.showSnackbar(
-          "Data not saved because it contains zero values.",
-          "error"
-        );
-      }
-    },
-
     showSnackbar(message, color) {
       this.snackbar.message = message;
       this.snackbar.color = color;
       this.snackbar.show = true;
     },
-    exportToExcel() {
-      // Prepare data for export
-      const dataToExport = this.mappedTableData.map((item) => {
-        return {
-          "Product Name": item.product_name,
-          "License Name": item.license_name,
-          "Software License or Appliance Quantity": item.license_quantity,
-          "Active Subscription & Support Quantity":
-            item.active_subscription_quantity,
-          "Data Collection": item.data_collection,
-          Production: item.production,
-          Develop: item.develop,
-          Status: item.status,
-          "Calculation Date": item.calculation_date,
-        };
-      });
 
-      // Convert data to Excel worksheet
-      const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    async exportAllDataToExcel() {
+      try {
+        // Fetch production data
+        await this.fetchProductionData();
+        await this.fetchDevelopData();
 
-      // Create Excel workbook
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
+        const month = this.selectedMonthCurr.toString().padStart(2, "0");
+        const year = this.selectedYearCurr;
+        const fileName = `Summary_${month}_${year}.xlsx`;
 
-      // Generate Excel file and trigger download
-      const excelBuffer = XLSX.write(workbook, {
-        bookType: "xlsx",
-        type: "array",
-      });
-      const fileName = "data_export.xlsx";
-      const blob = new Blob([excelBuffer], {
-        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", fileName);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+        // Export both main data and production data to Excel
+        exportToExcel(
+          this.mappedTableData,
+          this.wasprdData,
+          this.wasdevData,
+          this.securitydirectoryprdData,
+          this.securitydirectorydevData,
+          this.mqprdData,
+          this.mqdevData,
+          this.db2prdData,
+          this.db2devData,
+          this.productionData,
+          this.developData,
+          fileName
+        );
+      } catch (error) {
+        console.error("Error exporting data to Excel:", error);
+        this.showSnackbar("Error exporting data to Excel", "error");
+      }
     },
   },
 };
