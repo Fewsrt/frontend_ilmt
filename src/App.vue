@@ -40,7 +40,7 @@
     <v-footer app>
       <span class="mr-2 ml-auto"
         >&copy; {{ new Date().getFullYear() }} —
-        <strong>Datapro Computer System</strong></span
+        <strong>Datapro Computer System v0.5</strong></span
       >
     </v-footer>
   </v-app>
