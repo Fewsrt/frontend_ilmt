@@ -174,7 +174,7 @@ export default {
 
     async login() {
       try {
-        await axios.post(`/login`, {
+        await axios.post(`/api/login`, {
           username: this.username,
         });
         this.updateUsername(this.username); // Dispatch action to update username
@@ -186,7 +186,7 @@ export default {
     },
     async signup() {
       try {
-        await axios.post(`/signup`, {
+        await axios.post(`/api/signup`, {
           username: this.username,
         });
         this.updateUsername(this.username); // Dispatch action to update username
@@ -198,7 +198,7 @@ export default {
     },
     async fetchUsernames() {
       try {
-        const response = await axios.get(`/usernames`);
+        const response = await axios.get(`/api/usernames`);
         this.usernames = response.data;
       } catch (error) {
         console.error("Error fetching usernames:", error);

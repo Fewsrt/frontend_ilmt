@@ -40,7 +40,7 @@
     <v-footer app>
       <span class="mr-2 ml-auto"
         >&copy; {{ new Date().getFullYear() }} —
-        <strong>Datapro Computer System v0.5</strong></span
+        <strong>Datapro Computer System v0.6</strong></span
       >
     </v-footer>
   </v-app>
@@ -72,7 +72,7 @@ export default {
     },
     async logout() {
       try {
-        await axios.post(`/logout`);
+        await axios.post(`/api/logout`);
         this.$router.push("/");
         this.clearUsername(); // Call the clearUsername action from Vuex store
       } catch (error) {
