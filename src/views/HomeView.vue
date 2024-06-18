@@ -575,7 +575,7 @@ export default {
                         ? matchingPassportItem["Current Product"]
                         : null,
                       data_collection:
-                        parseInt(mappingItem.data_collection) || 0,
+                        parseFloat(mappingItem.data_collection) || 0,
                       production:
                         Object.keys(production).length === 0
                           ? 0 // If no values, assign an empty object
@@ -662,7 +662,7 @@ export default {
 
         const month = this.selectedMonthCurr.toString().padStart(2, "0");
         const year = this.selectedYearCurr;
-        const fileName = `Summary_${month}_${year}.xlsx`;
+        const fileName = `DCS Revised_ILMT_License Report_ILMT_${month}_${year}.xlsx`;
 
         // Export both main data and production data to Excel
         exportToExcel(

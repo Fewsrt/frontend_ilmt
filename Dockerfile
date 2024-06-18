@@ -20,7 +20,7 @@ RUN npm run build
 FROM nginx:alpine
 
 # Set environment variable
-ENV SERVER_NAME=http://b0710a3b7c88.sn.mynetname.net:3000/
+ENV SERVER_NAME=10.9.1.111:3000
 
 # Copy built files from the previous stage
 COPY --from=build /app/dist /usr/share/nginx/html
